@@ -1,5 +1,5 @@
 /**
- * API の疎通と契約の検査。T-30〜T-33 の完了判定と、以降の回帰検出に使う。
+ * API の疎通と契約の検査。T-30〜T-35 の完了判定と、以降の回帰検出に使う。
  *
  *   node scripts/check-api.mjs                        本番に対して
  *   node scripts/check-api.mjs http://localhost:8787  wrangler dev に対して
@@ -83,6 +83,44 @@ console.log(`対象: ${BASE}\n`);
   console.log(`destinations  ${off.body.total} -> ${on.body.total} 件 / 利用者限定の施設なし`);
 }
 
+// ---------- T-34 / T-35: /api/weather ----------
+{
+  const first = await get(`/api/weather?near=${ORIGIN.lat},${ORIGIN.lng}`);
+  const w = first.body?.weather;
+  ok(['clear', 'cloudy', 'rain', 'snow'].includes(w?.condition), `weather: condition が不正 (${w?.condition})`);
+  ok(typeof w?.tempC === 'number', 'weather: tempC が数値でない');
+  ok(typeof w?.summary === 'string' && w.summary.length > 0, 'weather: summary が空');
+  ok(['kv', 'origin'].includes(first.body?.source), `weather: 実データが取れていない (source=${first.body?.source})`);
+  ok(first.body?.degraded === false, 'weather: degraded が立っている');
+
+  // 2回目は KV から返ること (T-34 のキャッシュ)
+  const second = await get(`/api/weather?near=${ORIGIN.lat},${ORIGIN.lng}`);
+  ok(second.body?.source === 'kv', `weather: 2回目が KV から返っていない (${second.body?.source})`);
+  console.log(`weather       ${w?.summary} / ${first.body?.source} -> ${second.body?.source}`);
+}
+{
+  // T-35 雨の補正。距離が縮み、屋根の重みが上がること
+  const { body } = await get(`/api/weather?near=${ORIGIN.lat},${ORIGIN.lng}&demo=true`);
+  ok(body?.weather?.condition === 'rain', 'weather(demo): 雨になっていない');
+  for (const [feel, a] of Object.entries(body?.adjust ?? {})) {
+    ok(a.maxDistanceM < a.baseMaxDistanceM, `weather(demo): ${feel} の距離が縮んでいない`);
+    ok(a.maxRouteM < a.baseMaxRouteM, `weather(demo): ${feel} のルート上限が縮んでいない`);
+    ok(a.shelterWeight > a.baseShelterWeight, `weather(demo): ${feel} の屋根の重みが上がっていない`);
+    ok(a.note.length > 0, `weather(demo): ${feel} の注記が空`);
+  }
+  const g = body.adjust.good;
+  console.log(`weather(雨)   good ${g.baseMaxDistanceM}m -> ${g.maxDistanceM}m / 屋根 ${g.baseShelterWeight} -> ${g.shelterWeight}`);
+}
+{
+  // 取得に失敗しても止まらないこと。Open-Meteo が 400 を返す座標で確かめる
+  const { body } = await get('/api/weather?near=999,999');
+  ok(body?.source === 'fallback', `weather(縮退): fallback にならない (${body?.source})`);
+  ok(body?.degraded === true, 'weather(縮退): degraded が立っていない');
+  ok(body?.adjust?.good?.maxDistanceM === body?.adjust?.good?.baseMaxDistanceM,
+    'weather(縮退): 既定値なのに距離が補正されている');
+  console.log(`weather(縮退) ${body?.weather?.summary} / 補正なしで続行`);
+}
+
 // ---------- T-33: /api/suggest ----------
 for (const feel of ['good', 'tired', 'achy', 'low']) {
   for (const demo of [false, true]) {
@@ -95,6 +133,7 @@ for (const feel of ['good', 'tired', 'achy', 'low']) {
     ok(p?.sources?.length > 0, `suggest ${label}: sources が空`);
     ok(p?.totalDistanceM > 0, `suggest ${label}: totalDistanceM が 0`);
     ok(typeof body.degraded?.weather === 'boolean', `suggest ${label}: degraded が無い`);
+    ok(body.degraded.weather === false, `suggest ${label}: 天気が取れていない (T-34)`);
     ok(Array.isArray(body.alternatives), `suggest ${label}: alternatives が配列でない`);
 
     // 同じ場所を2回案内していないか

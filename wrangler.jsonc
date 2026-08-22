@@ -12,6 +12,12 @@
     // run_worker_first: ["/api/*"] に変更する (T-57)。
     "not_found_handling": "none"
   },
+  // T-34 天気キャッシュ。Open-Meteo の応答を 30分ぶん保持する。
+  // 落ちても degraded.weather=true で動くので、必須バインディングではない。
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "42d6d220970b44c0932ad263d1d3667f" }
+  ],
+
   "d1_databases": [
     {
       "binding": "DB",

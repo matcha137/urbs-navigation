@@ -42,6 +42,29 @@ GET /api/places?near=35.6816,139.7975&maxDistanceM=450&feel=achy
 
 `total` は `limit` をかける前の該当件数。
 
+## GET /api/weather — T-34 / T-35
+
+いまの天気と、それが体調プロファイルに与える補正。
+フロントは `/api/suggest` の `weather` を使うので、これは**補正が効いていることを目で確かめる窓**。
+
+| パラメータ | 例 | 説明 |
+|---|---|---|
+| `near` | `35.6816,139.7975` | 省略時はデモ起点 (清澄白河駅) |
+| `demo` | `true` | 固定の雨。補正の説明に使う |
+
+```json
+{
+  "weather": { "tempC": 18, "condition": "rain", "summary": "18° · 小雨、14時には上がる", "rainStopsAt": "14:00", "observedAt": "..." },
+  "source": "kv",
+  "degraded": false,
+  "adjust": {
+    "good": { "baseMaxDistanceM": 1200, "maxDistanceM": 780, "baseShelterWeight": 0.2, "shelterWeight": 0.6, "note": "雨なので短めに、屋根のある場所を優先しました" }
+  }
+}
+```
+
+`source` は `kv` | `origin` | `demo` | `fallback`。
+
 ## POST /api/suggest — T-33
 
 ```json
@@ -106,11 +129,52 @@ WHERE (step_free IS NULL OR step_free = 1) -- ○ 「段差ありと明記」だ
 消えたときだけ天気補正を外して引き直し、フッタに「天気ぶんの短縮を外して探しました」と出す。
 それでも 0件なら `404 no_candidates` を正直に返す。
 
+### 天気は Open-Meteo → KV 30分キャッシュ
+
+APIキー不要。`current=temperature_2m,weather_code` と `hourly=weather_code` だけを取る。
+
+- **キャッシュキー**は座標を小数2桁 (≈1.1km四方) に丸める。江東区なら数キーで収まる
+- **タイムアウト 2.5秒**。デモ中に画面が固まる方が損失が大きい
+- **KV への書き込みは `ctx.waitUntil()`** で応答を待たせない
+- **KV バインディングが無くても動く** (毎回 origin を叩くだけ)。ローカル開発で効く
+
+WMO コードは4分類 (`clear` / `cloudy` / `rain` / `snow`) に潰す。
+**分類を増やさないこと** — `WEATHER_ADJUST` が4つしか持っていない。
+雷雨 (95-99) は屋根を優先させたいので `rain` に寄せている。
+
+`rainStopsAt` は hourly を現在時刻から12時間先まで走査して、
+最初に雨でも雪でもなくなる時刻。見つからなければ `null` (「今日はずっと雨」)。
+
+### 天気が取れなくても止まらない
+
+天気は**あると嬉しい情報**であって前提ではない。失敗したら
+`FALLBACK` (22° / くもり = 補正が 1.0 になる値) + `degraded.weather=true` で続行する。
+デモ中に Open-Meteo が落ちてもプランは出る。
+
+本番で確認済み: `/api/weather?near=999,999` は `source:"fallback"`、`degraded:true` を返し、
+`adjust` は補正のかからない既定値のままになる。
+
+### 補正の効き方 (T-35)
+
+`effectiveLimits(feel, weather)` が唯一の入口。距離・ルート上限・歩数・屋根の重みを一括で返す。
+
+| | 距離 | 屋根の重み |
+|---|---|---|
+| 晴れ / くもり | ×1.0 | 変化なし |
+| 雨 | ×0.65 | +0.4 |
+| 雪 | ×0.5 | +0.5 |
+| 30℃以上 | ×0.6 | — |
+| 27℃以上 | ×0.8 | — |
+| 8℃以下 | ×0.85 | — |
+| 3℃以下 | ×0.65 | — |
+
+気温と天気の補正は**掛け算**。雨で30℃なら ×0.39 まで縮む。
+
 ### degraded は嘘をつかないための旗
 
 | フラグ | いまの値 | 外れる時 |
 |---|---|---|
-| `weather` | `true` (`demo:true` のときのみ `false`) | T-34 で Open-Meteo + KV |
+| `weather` | 取得できれば `false` | — (T-34 完了) |
 | `ai` | 常に `true` | T-70 で理由文を Workers AI に |
 | `vector` | 常に `true` | T-36〜T-38 で自然文検索 |
 

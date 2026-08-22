@@ -1,8 +1,8 @@
 /**
  * POST /api/suggest — 体調からプランを作る。T-33。
  *
- * まだ外部依存が繋がっていないので degraded が立つ:
- *   weather : T-34 で Open-Meteo + KV に差し替え
+ * まだ繋がっていない外部依存があるので degraded が立つ:
+ *   weather : Open-Meteo + KV で取得済み (T-34)。取れなかった時だけ true
  *   ai      : T-70 で理由文を Workers AI に差し替え
  *   vector  : T-36〜T-38 で自然文検索を足す (/api/suggest では使わない)
  *
@@ -45,7 +45,10 @@ suggest.post('/', async (c) => {
   const origin = { lat, lng };
   const profile = FEELS[feel];
 
-  const { weather, degraded: weatherDegraded } = await getWeather(c.env, origin, { demo: body.demo });
+  const { weather, degraded: weatherDegraded } = await getWeather(c.env, origin, {
+    demo: body.demo,
+    ctx: c.executionCtx, // KV への書き込みで応答を待たせない
+  });
   const limits = effectiveLimits(feel, weather);
 
   // --- 候補の取得 (T-31 距離 + T-32 ハードフィルタ) ---
