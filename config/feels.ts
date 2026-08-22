@@ -7,8 +7,66 @@ import type { FeelId, WeatherCondition } from '../shared/types';
  * 天気補正 (T-35)、LLM プロンプト (T-70) は全てここを読む。
  * マジックナンバーを他の場所に散らさないこと。
  *
- * 数値の根拠は design/ のモックに書かれた歩数・距離をそのまま採用している。
+ * ---
+ * T-12 の実データ調査を受けて改訂 (docs/datasets.md 参照)。
+ * **実データに存在しない項目をハードフィルタに使わない**という原則を敷いた。
+ * 存在しないものを必須にすると候補が全件ゼロになる。
  */
+
+// =====================================================================
+// データの欠落。ここに載っている項目はハードフィルタに使ってはいけない。
+// =====================================================================
+
+export const DATA_GAPS = {
+  /** ベンチの数: どのデータセットにも無い。面積からの推定 (SEATING_AREA_TIERS) で代替する。 */
+  benchCount: 'unavailable',
+  /** 手すり: 存在しない。place_access.handrail は常に 0。 */
+  handrail: 'unavailable',
+  /** 最寄バス停/駅までの距離: 採用3データセットに無い。nearest_transit_m は常に NULL。 */
+  nearestTransit: 'unavailable',
+  /** 公園内の段差: 公園データに無い。公共施設のみ「スロープ、エレベータ、エスカレータ」列が使えるが充足17%。 */
+  stepFreeForParks: 'unknown-not-absent',
+} as const;
+
+// =====================================================================
+// 座れる場所の代替指標
+// =====================================================================
+
+/**
+ * 面積(㎡) から「座れる場所の多さ」を推定する。
+ *
+ * 実データにベンチ数が存在しないための**代替指標**であり、観測値ではない。
+ * これを使って付けた属性は必ず place_access.confidence='inferred' とし、
+ * UI では「推定」であることが分かる表現にすること (T-59)。
+ *
+ * 閾値は江東区の公園173件の実分布に合わせてある:
+ *   min 114㎡ / p25 986㎡ / 中央値 1,690㎡ / p75 3,150㎡ / p90 12,691㎡ / max 152,998㎡
+ */
+export const SEATING_AREA_TIERS = [
+  { minAreaM2: 10000, tier: 3, label: '座れる場所が多そう' },   // 20/173件
+  { minAreaM2: 3000,  tier: 2, label: '座れる場所がありそう' }, // 47/173件
+  { minAreaM2: 1000,  tier: 1, label: '小さな公園' },           // 128/173件
+  { minAreaM2: 0,     tier: 0, label: '広さの情報なし' },
+] as const;
+
+export interface SeatingEstimate {
+  tier: 0 | 1 | 2 | 3;
+  label: string;
+  /** 常に 'inferred'。ベンチの実データが手に入ったらここを 'declared' にする。 */
+  confidence: 'inferred' | 'unknown';
+}
+
+export function seatingTierFromArea(areaM2: number | null | undefined): SeatingEstimate {
+  if (areaM2 == null || !(areaM2 > 0)) {
+    return { tier: 0, label: '広さの情報なし', confidence: 'unknown' };
+  }
+  const hit = SEATING_AREA_TIERS.find((t) => areaM2 >= t.minAreaM2)!;
+  return { tier: hit.tier as SeatingEstimate['tier'], label: hit.label, confidence: 'inferred' };
+}
+
+// =====================================================================
+// 体調プロファイル
+// =====================================================================
 
 export interface FeelProfile {
   id: FeelId;
@@ -17,23 +75,28 @@ export interface FeelProfile {
   /** ラベル下の補足。1行で収まる長さに保つ */
   hint: string;
 
-  // --- ハードフィルタ (満たさない場所は候補から消える) ---
+  // --- ハードフィルタ: 実データで判定できる項目のみ ---
+
   /** 出発地から1つ目の立ち寄り先までの許容直線距離 (m) */
   maxDistanceM: number;
   /** ルート総距離の上限 (m) */
   maxRouteM: number;
-  /** 段差なしが必須か */
-  requireStepFree: boolean;
-  /** 座れる場所の最低数。0 なら不問 */
-  minBenchCount: number;
-  /** だれでもトイレが必須か */
+  /**
+   * 車椅子対応トイレが半径 TOILET_JOIN_RADIUS_M 以内にあることを必須にするか。
+   * 公衆トイレ一覧との空間結合で判定できる (充足率100%)。
+   */
   requireAccessibleToilet: boolean;
-  /** 勾配のある場所を除外するか */
+  /**
+   * 「段差あり」と**明記された**場所だけを除外する。不明 (NULL) は残す。
+   * 公園には段差データが無いため、true にしても公園は落ちない。
+   * 「段差なしと明記された場所だけを通す」ではないことに注意。
+   */
+  excludeKnownStepped: boolean;
+  /** 勾配ありと明記された場所を除外するか */
   excludeSlope: boolean;
-  /** 最寄バス停/駅までの許容距離 (m)。null なら不問 */
-  maxTransitWalkM: number | null;
 
   // --- プランの形 ---
+
   /** プランに含める立ち寄り先の数 */
   maxStops: number;
   /** 表示する目安歩数 */
@@ -41,11 +104,19 @@ export interface FeelProfile {
   /** 表示する所要時間 (分) */
   targetMinutes: number;
 
-  // --- スコアリングの重み (0-1) ---
+  // --- スコアリング (落とさない。順位を変えるだけ) ---
+
+  /**
+   * 望ましい座れる場所の推定ティア (SEATING_AREA_TIERS)。
+   * **フィルタではない。** 下回っても候補から落とさず、スコアが下がるだけ。
+   * ベンチの実データが無い以上、ここを必須条件にはできない。
+   */
+  preferredSeatingTier: 0 | 1 | 2 | 3;
+
   weights: {
     /** 近さ */
     proximity: number;
-    /** 座れること */
+    /** 座れること (面積からの推定) */
     seating: number;
     /** 雨をしのげること */
     shelter: number;
@@ -54,6 +125,9 @@ export interface FeelProfile {
   };
 }
 
+/** 公園にトイレ・施設の属性を結合する半径。T-12 で実測して決めた値 (docs/datasets.md)。 */
+export const TOILET_JOIN_RADIUS_M = 200;
+
 export const FEELS: Record<FeelId, FeelProfile> = {
   good: {
     id: 'good',
@@ -61,14 +135,13 @@ export const FEELS: Record<FeelId, FeelProfile> = {
     hint: '歩ける。少し遠くてもいい',
     maxDistanceM: 1200,
     maxRouteM: 2000,
-    requireStepFree: false,
-    minBenchCount: 0,
     requireAccessibleToilet: false,
+    excludeKnownStepped: false,
     excludeSlope: false,
-    maxTransitWalkM: null,
     maxStops: 3,
     targetSteps: 3100,
     targetMinutes: 60,
+    preferredSeatingTier: 0,
     weights: { proximity: 0.2, seating: 0.1, shelter: 0.2, novelty: 0.5 },
   },
 
@@ -78,32 +151,31 @@ export const FEELS: Record<FeelId, FeelProfile> = {
     hint: '短く、平らに。すぐ帰れると安心',
     maxDistanceM: 600,
     maxRouteM: 900,
-    requireStepFree: true,
-    minBenchCount: 2,
     requireAccessibleToilet: false,
+    excludeKnownStepped: true,
     excludeSlope: false,
-    maxTransitWalkM: 300,
     maxStops: 2,
     targetSteps: 1200,
     targetMinutes: 35,
-    weights: { proximity: 0.45, seating: 0.3, shelter: 0.15, novelty: 0.1 },
+    preferredSeatingTier: 2,
+    // ベンチが必須条件から外れた分、seating の重みを上げて順位で効かせる。
+    weights: { proximity: 0.35, seating: 0.4, shelter: 0.15, novelty: 0.1 },
   },
 
   achy: {
     id: 'achy',
     label: '体が痛い',
-    hint: '階段なし。手すりと休む場所がほしい',
+    hint: '階段なし。休める場所が近くにほしい',
     maxDistanceM: 450,
     maxRouteM: 750,
-    requireStepFree: true,
-    minBenchCount: 3,
-    requireAccessibleToilet: true,
+    requireAccessibleToilet: true, // ← 実データで判定できる唯一の強い条件
+    excludeKnownStepped: true,
     excludeSlope: true,
-    maxTransitWalkM: 200,
     maxStops: 2,
     targetSteps: 950,
     targetMinutes: 40,
-    weights: { proximity: 0.4, seating: 0.4, shelter: 0.15, novelty: 0.05 },
+    preferredSeatingTier: 3,
+    weights: { proximity: 0.3, seating: 0.5, shelter: 0.15, novelty: 0.05 },
   },
 
   low: {
@@ -112,14 +184,13 @@ export const FEELS: Record<FeelId, FeelProfile> = {
     hint: '外の空気だけでも。10分で戻れる範囲',
     maxDistanceM: 250,
     maxRouteM: 350,
-    requireStepFree: true,
-    minBenchCount: 1,
     requireAccessibleToilet: false,
+    excludeKnownStepped: true,
     excludeSlope: true,
-    maxTransitWalkM: 150,
     maxStops: 1,
     targetSteps: 400,
     targetMinutes: 15,
+    preferredSeatingTier: 1,
     weights: { proximity: 0.6, seating: 0.25, shelter: 0.1, novelty: 0.05 },
   },
 };
@@ -127,6 +198,10 @@ export const FEELS: Record<FeelId, FeelProfile> = {
 export const FEEL_LIST: FeelProfile[] = [
   FEELS.good, FEELS.tired, FEELS.achy, FEELS.low,
 ];
+
+// =====================================================================
+// 天気補正
+// =====================================================================
 
 /**
  * 天気による補正 (T-35)。プロファイルに掛けて使う。

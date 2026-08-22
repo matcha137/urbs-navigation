@@ -1,54 +1,68 @@
 {
   "plan": {
     "id": "plan-good-1",
-    "title": "清澄から深川へ、川ぞいの道",
+    "title": "白河から清澄へ、公園をつなぐ道",
     "summary": "1.9 km · 1時間ほど · 家から徒歩8分で始まる",
     "headline": "なら、雨上がりを使いましょう。",
     "stops": [
       {
         "order": 1,
-        "placeId": "park:kiyosumi",
-        "name": "清澄庭園",
-        "note": "池を一周。雨のあとは砂利が締まって歩きやすい",
+        "placeId": "park:AA0131083008",
+        "name": "江東区立白河一丁目公園",
+        "note": "1,550㎡。広さから見て座れる場所がありそう",
         "stayLabel": "25分",
-        "lat": 35.6816,
-        "lng": 139.7975
+        "lat": 35.683196,
+        "lng": 139.800774
       },
       {
         "order": 2,
-        "placeId": "street:fukagawa",
-        "name": "深川資料館通り",
-        "note": "屋根のある商店街。途中で甘いものが買える",
+        "placeId": "park:AA0131083001",
+        "name": "江東区立清澄二丁目公園",
+        "note": "車椅子対応トイレが139m以内",
         "stayLabel": "20分",
-        "lat": 35.68,
-        "lng": 139.799
+        "lat": 35.682615,
+        "lng": 139.796194
       },
       {
         "order": 3,
-        "placeId": "cafe:sanwa",
-        "name": "喫茶三和",
-        "note": "運河を見ながら座って終わる",
+        "placeId": "facility:131083000015",
+        "name": "江東区深川江戸資料館",
+        "note": "スロープありと登録されている屋内施設",
         "stayLabel": "ゆっくり",
-        "lat": 35.6789,
-        "lng": 139.801
+        "lat": 35.681189,
+        "lng": 139.800595
       }
     ],
     "tags": [
       "1.9 km",
       "≈3,100歩",
-      "段差なし",
-      "座れる場所3つ"
+      "だれでもトイレあり",
+      "屋内で休める"
     ],
-    "footer": "≈3,100歩 · 座れる場所3つ · 帰りはバス陽20が門前から",
+    "footer": "≈3,100歩 · 途中に車椅子対応トイレ · 最後は屋内",
     "totalDistanceM": 1900,
     "estimatedSteps": 3100,
     "estimatedMinutes": 60,
     "sources": [
       {
-        "datasetName": "（サンプル）都立公園一覧",
-        "publisher": "東京都",
-        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/",
-        "license": "CC BY 4.0",
+        "datasetName": "江東区 都市公園・都立公園一覧",
+        "publisher": "江東区",
+        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d2025000003",
+        "license": "クリエイティブ・コモンズ 表示（CC BY）",
+        "retrievedAt": "2026-08-22T00:00:00.000Z"
+      },
+      {
+        "datasetName": "江東区 公衆トイレ一覧",
+        "publisher": "江東区",
+        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d0000000019",
+        "license": "クリエイティブ・コモンズ 表示（CC BY）",
+        "retrievedAt": "2026-08-22T00:00:00.000Z"
+      },
+      {
+        "datasetName": "江東区 公共施設一覧",
+        "publisher": "江東区",
+        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d0000000024",
+        "license": "クリエイティブ・コモンズ 表示（CC BY）",
         "retrievedAt": "2026-08-22T00:00:00.000Z"
       }
     ]
@@ -56,44 +70,59 @@
   "alternatives": [
     {
       "id": "plan-tired-1-alt",
-      "title": "池の短い方の回り道",
-      "summary": "800 m · 35分ほど · バスで一区間",
-      "headline": "なら、短く平らに、バス停の近くで。",
+      "title": "白河一丁目公園から、屋内へ",
+      "summary": "800 m · 35分ほど · 短い方の道",
+      "headline": "なら、短く。すぐ屋内に入れる道で。",
       "stops": [
         {
           "order": 1,
-          "placeId": "park:kiyosumi",
-          "name": "清澄庭園",
-          "note": "茶室側の半周だけ。ベンチが多い方",
+          "placeId": "park:AA0131083008",
+          "name": "江東区立白河一丁目公園",
+          "note": "1,550㎡。座れる場所がありそうな広さ",
           "stayLabel": "15分",
-          "lat": 35.6816,
-          "lng": 139.7975
+          "lat": 35.683196,
+          "lng": 139.800774
         },
         {
           "order": 2,
-          "placeId": "cafe:sanwa",
-          "name": "喫茶三和",
-          "note": "麦茶と窓ぎわの席",
+          "placeId": "facility:131083000015",
+          "name": "江東区深川江戸資料館",
+          "note": "屋内。雨でも濡れずに休める",
           "stayLabel": "ゆっくり",
-          "lat": 35.6789,
-          "lng": 139.801
+          "lat": 35.681189,
+          "lng": 139.800595
         }
       ],
       "tags": [
         "800 m",
         "≈1,200歩",
-        "バス停が門前"
+        "座れる場所がありそう",
+        "屋内あり"
       ],
-      "footer": "≈1,200歩 · いつでも座れる · バスまで徒歩6分",
+      "footer": "≈1,200歩 · 車椅子対応トイレが4m以内 · 屋内で終われる",
       "totalDistanceM": 800,
       "estimatedSteps": 1200,
       "estimatedMinutes": 35,
       "sources": [
         {
-          "datasetName": "（サンプル）都立公園一覧",
-          "publisher": "東京都",
-          "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/",
-          "license": "CC BY 4.0",
+          "datasetName": "江東区 都市公園・都立公園一覧",
+          "publisher": "江東区",
+          "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d2025000003",
+          "license": "クリエイティブ・コモンズ 表示（CC BY）",
+          "retrievedAt": "2026-08-22T00:00:00.000Z"
+        },
+        {
+          "datasetName": "江東区 公衆トイレ一覧",
+          "publisher": "江東区",
+          "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d0000000019",
+          "license": "クリエイティブ・コモンズ 表示（CC BY）",
+          "retrievedAt": "2026-08-22T00:00:00.000Z"
+        },
+        {
+          "datasetName": "江東区 公共施設一覧",
+          "publisher": "江東区",
+          "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d0000000024",
+          "license": "クリエイティブ・コモンズ 表示（CC BY）",
           "retrievedAt": "2026-08-22T00:00:00.000Z"
         }
       ]

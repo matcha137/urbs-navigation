@@ -16,18 +16,48 @@ export type PlaceCategory =
   | 'park' | 'garden' | 'riverside' | 'shrine'
   | 'facility' | 'cafe' | 'toilet' | 'other';
 
-/** バリアフリー属性。すべて place_access テーブル由来。 */
+/**
+ * バリアフリー属性。すべて place_access テーブル由来。
+ *
+ * 重要: stepFree と slope は **三値**。null は「不明」であって「非対応」ではない。
+ * 公園データには段差の情報が無いため、公園はほぼ null になる。
+ * UI で null を「×」と表示しないこと (T-59)。
+ */
 export interface PlaceAccess {
-  stepFree: boolean;
-  benchCount: number;
+  /** true=段差なしと明記 / false=段差ありと明記 / null=不明 */
+  stepFree: boolean | null;
+  /** true=勾配ありと明記 / false=なしと明記 / null=不明 */
+  slope: boolean | null;
+
+  /**
+   * 座れる場所の多さ。**ベンチの実データが存在しないため面積からの推定**。
+   * 観測値ではないので、UI では断定しない表現にすること。
+   */
+  seating: {
+    tier: 0 | 1 | 2 | 3;
+    label: string;
+    confidence: 'inferred' | 'unknown';
+  };
+  /** 面積 (㎡)。公園のみ。施設は null */
+  areaM2: number | null;
+
+  /** 以下は公衆トイレ一覧との空間結合 (半径200m) で導出。充足率100%の強い属性 */
   hasToilet: boolean;
   accessibleToilet: boolean;
-  handrail: boolean;
+  ostomate: boolean;
+  /** 結合した車椅子対応トイレまでの距離 (m) */
+  toiletDistanceM: number | null;
+
+  /** 屋内で雨をしのげるか */
   shelter: boolean;
-  slope: boolean;
-  /** 最寄バス停・駅までの距離 (m)。データに無ければ null。 */
+
+  // --- データが存在しない項目。フィルタに使わない ---
+  /** データセットに存在しないため常に false */
+  handrail: boolean;
+  /** データセットに存在しないため常に null */
   nearestTransitM: number | null;
-  /** 'declared' = 元データに明記 / 'inferred' = 備考テキストから推定 */
+
+  /** 'declared' = 元データに明記 / 'inferred' = 空間結合や面積からの推定 */
   confidence: 'declared' | 'inferred';
 }
 

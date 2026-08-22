@@ -1,24 +1,24 @@
 {
   "plan": {
     "id": "plan-low-1",
-    "title": "通りの端の、10分の緑",
-    "summary": "300 m · 好きなだけ · 家の前の道の先",
-    "headline": "なら、通りの端まででいい。",
+    "title": "清澄二丁目公園まで",
+    "summary": "300 m · 好きなだけ · 通りの先",
+    "headline": "なら、通りの先まででいい。",
     "stops": [
       {
         "order": 1,
-        "placeId": "park:sengoku-pocket",
-        "name": "千石ポケットガーデン",
-        "note": "けやきの下にベンチが2つ。家から40m",
+        "placeId": "park:AA0131083001",
+        "name": "江東区立清澄二丁目公園",
+        "note": "833㎡の小さな公園。トイレは139m先",
         "stayLabel": "10分",
-        "lat": 35.728,
-        "lng": 139.742
+        "lat": 35.682615,
+        "lng": 139.796194
       }
     ],
     "tags": [
       "300 m",
-      "段差なし",
-      "2分で帰れる"
+      "2分で帰れる",
+      "だれでもトイレ 139m"
     ],
     "footer": "≈400歩 · それでも外に出たことになる · 明日はもっと長くていい",
     "totalDistanceM": 300,
@@ -26,10 +26,17 @@
     "estimatedMinutes": 15,
     "sources": [
       {
-        "datasetName": "（サンプル）都立公園一覧",
-        "publisher": "東京都",
-        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/",
-        "license": "CC BY 4.0",
+        "datasetName": "江東区 都市公園・都立公園一覧",
+        "publisher": "江東区",
+        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d2025000003",
+        "license": "クリエイティブ・コモンズ 表示（CC BY）",
+        "retrievedAt": "2026-08-22T00:00:00.000Z"
+      },
+      {
+        "datasetName": "江東区 公衆トイレ一覧",
+        "publisher": "江東区",
+        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d0000000019",
+        "license": "クリエイティブ・コモンズ 表示（CC BY）",
         "retrievedAt": "2026-08-22T00:00:00.000Z"
       }
     ]
