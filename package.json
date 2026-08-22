@@ -16,8 +16,10 @@
     "etl:catalog": "node etl/00-catalog.mjs",
     "etl:encode": "node etl/02-encode.mjs",
     "etl:normalize": "node etl/03-normalize.mjs",
-    "etl": "npm run etl:encode && npm run etl:normalize && npm run check:normalized",
-    "check:normalized": "node scripts/check-normalized.mjs"
+    "etl": "npm run etl:encode && npm run etl:normalize && npm run check:normalized && npm run etl:select && npm run etl:emit",
+    "check:normalized": "node scripts/check-normalized.mjs",
+    "etl:select": "node etl/04-select.mjs",
+    "etl:emit": "node etl/05-emit-sql.mjs"
   },
   "dependencies": {
     "hono": "^4.13.3"
