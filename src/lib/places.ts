@@ -35,6 +35,13 @@ export interface PlaceRow {
   dist_m?: number;
 }
 
+/**
+ * D1 が 1文で受けるバインドパラメータの上限。
+ * 実測で ?1〜?100。IN () に id を積むときはこれで割る。
+ * 距離・limit のぶんの余白を見て 90 にしてある。
+ */
+export const PARAM_LIMIT = 90;
+
 const COLUMNS = `id, name, name_kana, lat, lng, ward, category, description, address,
     step_free, slope, area_m2, seating_tier, has_toilet, accessible_toilet, ostomate,
     toilet_distance_m, shelter, handrail, nearest_transit_m, confidence`;
@@ -108,10 +115,14 @@ export function feelConditions(p: FeelProfile): string[] {
 /**
  * 行き先にならない施設を外す WHERE 句。config/destinations.ts が唯一の正。
  * 利用者限定の福祉施設や予約制の集会所を「行きましょう」と勧めないための条件。
+ *
+ * **リテラルで埋め込む。** D1 のバインドパラメータは 1文あたり 100個までで、
+ * ここで 19個使うと Vectorize の id (最大100件) を積む枠が無くなる。
+ * 語は config の const 配列でユーザ入力ではないが、念のため引用符は潰す。
  */
-export function destinationConditions(params: Params): string {
+export function destinationConditions(): string {
   return NOT_A_DESTINATION
-    .map((kw) => `name NOT LIKE ${params.add(`%${kw}%`)}`)
+    .map((kw) => `name NOT LIKE '%${kw.replace(/'/g, "''")}%'`)
     .join(' AND ');
 }
 
@@ -132,6 +143,14 @@ export interface PlaceQueryOptions {
   feel?: FeelProfile;
   /** true で「行き先にならない施設」を除く (config/destinations.ts)。suggest は常に true */
   destinationsOnly?: boolean;
+  /** この id のものだけに絞る。Vectorize が返した候補を D1 で肉付けするのに使う (T-38) */
+  ids?: string[];
+  /** 名前と説明文の部分一致。ベクトル検索が落ちたときの縮退用 (T-39) */
+  textLike?: string;
+  /** 屋内のみ。/api/search が問い合わせ文から読み取って使う (T-38) */
+  shelter?: boolean;
+  /** 車椅子対応トイレありのみ */
+  accessibleToilet?: boolean;
 }
 
 export interface PlaceQueryResult {
@@ -157,7 +176,19 @@ export async function queryPlaces(
   if (opts.category) where.push(`category = ${params.add(opts.category)}`);
   if (opts.stepFree !== undefined) where.push(`step_free = ${params.add(opts.stepFree ? 1 : 0)}`);
   if (opts.feel) where.push(...feelConditions(opts.feel));
-  if (opts.destinationsOnly) where.push(destinationConditions(params));
+  if (opts.destinationsOnly) where.push(destinationConditions());
+  if (opts.ids) {
+    if (!opts.ids.length) return { rows: [], total: 0 }; // IN () は構文エラーになる
+    if (opts.ids.length > PARAM_LIMIT)
+      throw new Error(`ids が ${opts.ids.length} 件。D1 のパラメータ上限を超える (${PARAM_LIMIT} まで)`);
+    where.push(`id IN (${opts.ids.map((id) => params.add(id)).join(', ')})`);
+  }
+  if (opts.shelter) where.push('shelter = 1');
+  if (opts.accessibleToilet) where.push('accessible_toilet = 1');
+  if (opts.textLike) {
+    const like = params.add(`%${opts.textLike.replace(/[%_]/g, '')}%`);
+    where.push(`(name LIKE ${like} OR description LIKE ${like})`);
+  }
 
   const inner = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
@@ -200,33 +231,41 @@ export async function fetchSources(
   const map = new Map<string, PlaceSource[]>();
   if (!ids.length) return map;
 
-  const params = new Params();
-  const holes = ids.map((id) => params.add(id)).join(', ');
-  const { results } = await db
-    .prepare(
-      `SELECT place_id, dataset_name, publisher, source_url, license, retrieved_at
-       FROM place_source WHERE place_id IN (${holes})`
-    )
-    .bind(...params.values)
-    .all<{
-      place_id: string;
-      dataset_name: string;
-      publisher: string;
-      source_url: string;
-      license: string;
-      retrieved_at: string;
-    }>();
+  // D1 のバインドパラメータは 1文あたり 100個まで。IN () に積みすぎると
+  // "variable number must be between ?1 and ?100" で落ちるので割る
+  const statements: D1PreparedStatement[] = [];
+  for (let i = 0; i < ids.length; i += PARAM_LIMIT) {
+    const params = new Params();
+    const holes = ids.slice(i, i + PARAM_LIMIT).map((id) => params.add(id)).join(', ');
+    statements.push(
+      db.prepare(
+        `SELECT place_id, dataset_name, publisher, source_url, license, retrieved_at
+         FROM place_source WHERE place_id IN (${holes})`
+      ).bind(...params.values)
+    );
+  }
 
-  for (const r of results ?? []) {
-    const list = map.get(r.place_id) ?? [];
-    list.push({
-      datasetName: r.dataset_name,
-      publisher: r.publisher,
-      sourceUrl: r.source_url,
-      license: r.license,
-      retrievedAt: r.retrieved_at,
-    });
-    map.set(r.place_id, list);
+  const batches = await db.batch<{
+    place_id: string;
+    dataset_name: string;
+    publisher: string;
+    source_url: string;
+    license: string;
+    retrieved_at: string;
+  }>(statements);
+
+  for (const b of batches) {
+    for (const r of b.results ?? []) {
+      const list = map.get(r.place_id) ?? [];
+      list.push({
+        datasetName: r.dataset_name,
+        publisher: r.publisher,
+        sourceUrl: r.source_url,
+        license: r.license,
+        retrievedAt: r.retrieved_at,
+      });
+      map.set(r.place_id, list);
+    }
   }
   return map;
 }

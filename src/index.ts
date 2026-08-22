@@ -3,6 +3,8 @@ import { FEEL_LIST } from '../config/feels';
 import { places } from './routes/places';
 import { suggest } from './routes/suggest';
 import { weather } from './routes/weather';
+import { search } from './routes/search';
+import { admin } from './routes/admin';
 import type { Bindings } from './types';
 
 export type { Bindings };
@@ -42,6 +44,8 @@ app.get('/api/feels', (c) =>
 app.route('/api/places', places);
 app.route('/api/suggest', suggest);
 app.route('/api/weather', weather);
+app.route('/api/search', search);
+app.route('/api/admin', admin);
 
 /**
  * 想定外の例外。D1 が落ちた・SQL が壊れた等がここに来る。

@@ -84,6 +84,8 @@ export interface Place {
   sources: PlaceSource[];
   /** 検索基準点からの直線距離 (m)。/api/places, /api/suggest でのみ入る。 */
   distanceM?: number;
+  /** ベクトル検索の類似度 (0-1)。/api/search でのみ入る。縮退時は入らない (T-39)。 */
+  matchScore?: number;
 }
 
 // ---------- 天気 ----------
@@ -184,11 +186,21 @@ export interface SearchRequest {
   lng?: number;
   feel?: FeelId;
   limit?: number;
+  /**
+   * true でベクトル検索を意図的に飛ばし、縮退経路を通す (T-39)。
+   * 「AI が落ちたときにどう見えるか」を本番でリハーサルするためのもの。
+   */
+  simulateVectorOutage?: boolean;
 }
 
 export interface SearchResponse {
   places: Place[];
   degraded: Pick<DegradedFlags, 'vector'>;
+  /**
+   * 問い合わせ文から読み取れた条件のラベル。例: ["屋内", "公園"]。
+   * 画面に「屋内で絞りました」と出すためのもの (T-58)。空なら類似度だけで並べた。
+   */
+  intent?: string[];
 }
 
 export interface ApiError {

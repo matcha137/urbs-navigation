@@ -4,7 +4,7 @@
  * まだ繋がっていない外部依存があるので degraded が立つ:
  *   weather : Open-Meteo + KV で取得済み (T-34)。取れなかった時だけ true
  *   ai      : T-70 で理由文を Workers AI に差し替え
- *   vector  : T-36〜T-38 で自然文検索を足す (/api/suggest では使わない)
+ *   vector  : /api/search が使えるか。この endpoint 自体は索引を引かない
  *
  * degraded は「嘘をつかないための旗」。UI はこれを見て注記を出す (T-39)。
  *
@@ -103,7 +103,9 @@ suggest.post('/', async (c) => {
     degraded: {
       weather: weatherDegraded,
       ai: true, // T-70 まではルールベースの文章
-      vector: true, // T-36〜T-38 まではベクトル検索なし
+      // /api/suggest 自体はベクトル検索を使わない。この旗は
+      // 「別の場所を探す」導線 (/api/search) が使えるかをフロントに伝えるためのもの
+      vector: !c.env.VECTORIZE,
     },
     generatedAt: new Date().toISOString(),
   };

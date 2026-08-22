@@ -20,7 +20,8 @@
     "check:normalized": "node scripts/check-normalized.mjs",
     "etl:select": "node etl/04-select.mjs",
     "etl:emit": "node etl/05-emit-sql.mjs",
-    "check:api": "node scripts/check-api.mjs"
+    "check:api": "node scripts/check-api.mjs",
+    "reindex": "node scripts/reindex.mjs"
   },
   "dependencies": {
     "hono": "^4.13.3"
