@@ -1,7 +1,10 @@
 -- Tokyo Outings / 参照クエリ集
 --
--- T-31 (距離計算) と T-32 (ハードフィルタ) はここを写して実装する。
--- 本番 D1 で実行済み・動作確認済み。
+-- T-31 (距離計算) と T-32 (ハードフィルタ) はここを写して実装済み:
+--   距離式      src/lib/sql.ts        distanceExpr()
+--   ハードフィルタ src/lib/places.ts     feelConditions()
+--   行き先の除外  src/lib/places.ts     destinationConditions() / config/destinations.ts
+-- 本番 D1 で実行済み・動作確認済み。式を直すときは両方を同時に直すこと。
 
 -- =====================================================================
 -- D1 の落とし穴: power() が使えない

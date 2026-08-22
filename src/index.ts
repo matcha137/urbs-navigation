@@ -1,14 +1,10 @@
 import { Hono } from 'hono';
 import { FEEL_LIST } from '../config/feels';
+import { places } from './routes/places';
+import { suggest } from './routes/suggest';
+import type { Bindings } from './types';
 
-export type Bindings = {
-  ASSETS: Fetcher;
-  DB: D1Database;
-  // 以降で追加される:
-  // CACHE: KVNamespace;      (T-34 天気キャッシュ)
-  // AI: Ai;                  (T-37 埋め込み / T-71 理由生成)
-  // VECTORIZE: VectorizeIndex; (T-36)
-};
+export type { Bindings };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -41,6 +37,18 @@ app.get('/api/feels', (c) =>
     })),
   })
 );
+
+app.route('/api/places', places);
+app.route('/api/suggest', suggest);
+
+/**
+ * 想定外の例外。D1 が落ちた・SQL が壊れた等がここに来る。
+ * ハッカソン中は原因を知りたいので message をそのまま返す。
+ */
+app.onError((err, c) => {
+  console.error(err);
+  return c.json({ error: 'internal_error', message: err.message }, 500);
+});
 
 app.notFound((c) => c.json({ error: 'not_found', path: c.req.path }, 404));
 

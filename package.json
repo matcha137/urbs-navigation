@@ -19,7 +19,8 @@
     "etl": "npm run etl:encode && npm run etl:normalize && npm run check:normalized && npm run etl:select && npm run etl:emit",
     "check:normalized": "node scripts/check-normalized.mjs",
     "etl:select": "node etl/04-select.mjs",
-    "etl:emit": "node etl/05-emit-sql.mjs"
+    "etl:emit": "node etl/05-emit-sql.mjs",
+    "check:api": "node scripts/check-api.mjs"
   },
   "dependencies": {
     "hono": "^4.13.3"
