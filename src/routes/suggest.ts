@@ -3,7 +3,7 @@
  *
  * まだ繋がっていない外部依存があるので degraded が立つ:
  *   weather : Open-Meteo + KV で取得済み (T-34)。取れなかった時だけ true
- *   ai      : T-70 で理由文を Workers AI に差し替え
+ *   ai      : 理由文を Workers AI が書く (T-71)。検証に落ちたらルールベースに戻す
  *   vector  : /api/search が使えるか。この endpoint 自体は索引を引かない
  *
  * degraded は「嘘をつかないための旗」。UI はこれを見て注記を出す (T-39)。
@@ -17,6 +17,7 @@ import { FEELS, effectiveLimits } from '../../config/feels';
 import { hydrate, queryPlaces } from '../lib/places';
 import { buildPlans } from '../lib/plan';
 import { getWeather } from '../lib/weather';
+import { applyReasons } from '../lib/reason';
 import type { Bindings } from '../types';
 
 /** スコアリングに回す候補の上限。多すぎても順位が変わらないので頭を打つ。 */
@@ -92,6 +93,16 @@ suggest.post('/', async (c) => {
   const { plan, alternatives } = buildPlans(feel, places, weather, origin);
   if (!plan) return c.json({ error: 'no_candidates', message: 'プランを組めませんでした' }, 404);
 
+  // --- 理由文 (T-71〜T-73) ---
+  // **本命のプランだけ**に AI を使う。代替2件まで生成すると呼び出しが3倍になり、
+  // 「別の場所を見せて」を押した瞬間に見えるものが増えるわけでもない
+  const byId = new Map(places.map((p) => [p.id, p]));
+  const stopPlaces = plan.stops.map((s) => byId.get(s.placeId)!).filter(Boolean);
+  const reason = await applyReasons(c.env, feel, profile.label, weather, plan, stopPlaces, {
+    simulateOutage: body.simulateAiOutage,
+    ctx: c.executionCtx,
+  });
+
   if (widened) {
     plan.footer += ' · 天気ぶんの短縮を外して探しました';
   }
@@ -102,12 +113,13 @@ suggest.post('/', async (c) => {
     weather,
     degraded: {
       weather: weatherDegraded,
-      ai: true, // T-70 まではルールベースの文章
+      ai: reason.degraded, // AI の文を1つも使えなかったとき true
       // /api/suggest 自体はベクトル検索を使わない。この旗は
       // 「別の場所を探す」導線 (/api/search) が使えるかをフロントに伝えるためのもの
       vector: !c.env.VECTORIZE,
     },
     generatedAt: new Date().toISOString(),
+    ...(reason.rejected.length ? { aiRejected: reason.rejected } : {}),
   };
   return c.json(res);
 });

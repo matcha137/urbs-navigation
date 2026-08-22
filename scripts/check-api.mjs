@@ -1,5 +1,7 @@
 /**
- * API の疎通と契約の検査。T-30〜T-39 の完了判定と、以降の回帰検出に使う。
+ * API の疎通と契約の検査。T-30〜T-39 / T-70〜T-73 の完了判定と、以降の回帰検出に使う。
+ *
+ * ADMIN_TOKEN があれば検証 (T-72) の検査も回す。無ければその節だけ飛ばす。
  *
  *   node scripts/check-api.mjs                        本番に対して
  *   node scripts/check-api.mjs http://localhost:8787  wrangler dev に対して
@@ -225,6 +227,133 @@ for (const feel of ['good', 'tired', 'achy', 'low']) {
     ok(status === want, `search 入力検査 [${label}]: ${want} のはずが ${status}`);
   }
   console.log(`search 検査   ${cases.length} 件 OK`);
+}
+
+// ---------- T-70〜T-73: 理由文 ----------
+{
+  // 出来上がった文が**データに無いことを言っていない**こと。
+  // ここが落ちたらアプリの信用が壊れるので、一番強く見張る。
+  // config/prompts.ts の BANNED_WORDS の要点を写したもの
+  const FORBIDDEN = /ベンチ|手すり|遊具|静か|景色|眺め|桜|営業|無料|駅から|徒歩|気晴らし|元気を出|頑張/;
+
+  for (const feel of ['good', 'tired', 'achy', 'low']) {
+    const { body } = await post('/api/suggest', { feel, ...ORIGIN });
+    const p = body?.plan;
+    if (!p) { errors.push(`reason ${feel}: プランが返らない`); continue; }
+
+    const texts = [p.headline, p.title, ...p.stops.map((s) => s.note)];
+    for (const t of texts) {
+      const hit = t?.match(FORBIDDEN);
+      ok(!hit, `reason ${feel}: データに無い語「${hit?.[0]}」が出ている — "${t}"`);
+    }
+
+    // 数字は事実に出てくるものだけ。距離・面積・トイレ距離・所要・歩数
+    const allowed = new Set([
+      String(p.totalDistanceM), String(p.estimatedMinutes), String(p.estimatedSteps),
+      String(p.stops.length),
+      ...p.stops.flatMap((s) => {
+        const pl = null; return [];
+      }),
+    ]);
+    // 立ち寄り先の属性値も許す
+    const detail = await post('/api/search', { q: p.stops[0].name, limit: 1 });
+    for (const pl of detail.body?.places ?? []) {
+      if (pl.access.areaM2 != null) allowed.add(String(Math.round(pl.access.areaM2)));
+      if (pl.access.toiletDistanceM != null) allowed.add(String(pl.access.toiletDistanceM));
+    }
+
+    // headline / title は**プラン全体**の主張。1箇所でも不明が混ざれば言えない
+    const details = [];
+    for (const stop of p.stops) {
+      const pl = (await get(`/api/places/${encodeURIComponent(stop.placeId)}`)).body;
+      if (pl?.access) details.push(pl);
+    }
+    const allStepFree = details.length > 0 && details.every((d) => d.access.stepFree === true);
+    const allShelter = details.length > 0 && details.every((d) => d.access.shelter);
+    for (const t of [p.headline, p.title]) {
+      if (!allStepFree)
+        ok(!/段差|バリアフリー|平坦|フラット/.test(t),
+          `reason ${feel}: 段差不明を含むのに見出しが「${t}」`);
+      if (!allShelter)
+        ok(!/屋内|室内|雨をしのげ/.test(t), `reason ${feel}: 屋外を含むのに見出しが「${t}」`);
+    }
+
+    // 段差不明の場所に「段差なし」と書いていないこと
+    for (const stop of p.stops) {
+      const pl = (await get(`/api/places/${encodeURIComponent(stop.placeId)}`)).body;
+      if (pl?.access?.stepFree !== true)
+        ok(!/段差|バリアフリー|平坦|フラット/.test(stop.note),
+          `reason ${feel}: 段差不明の ${stop.name} が段差に言及している — "${stop.note}"`);
+      if (!pl?.access?.shelter)
+        ok(!/屋内|室内|雨をしのげ/.test(stop.note),
+          `reason ${feel}: 屋外の ${stop.name} を屋内と書いている — "${stop.note}"`);
+      if (!pl?.access?.accessibleToilet)
+        ok(!/車椅子|車いす/.test(stop.note),
+          `reason ${feel}: 車椅子対応でない ${stop.name} に車椅子と書いている — "${stop.note}"`);
+    }
+
+    console.log(`reason ${feel.padEnd(6)} ai縮退=${body.degraded.ai} — ${p.headline} / ${p.title}`);
+  }
+}
+{
+  // T-73 縮退。AI が落ちてもルールベースの文で返ること
+  const { body } = await post('/api/suggest', { feel: 'achy', ...ORIGIN, simulateAiOutage: true });
+  ok(body?.degraded?.ai === true, 'reason(縮退): degraded.ai が立っていない');
+  ok(body?.plan?.headline?.length > 0, 'reason(縮退): headline が空');
+  ok(body?.plan?.stops?.every((s) => s.note?.length > 0), 'reason(縮退): note が空');
+  ok((body?.aiRejected ?? []).length > 0, 'reason(縮退): 落ちた理由が記録されていない');
+  console.log(`reason(縮退)  ルールベースで返る — ${body.plan.headline}`);
+}
+if (process.env.ADMIN_TOKEN) {
+  // T-72 の安全装置そのものを叩く。本番と同じ validate() を通す
+  const probe = async (text, field, numbers, place) => {
+    const r = await fetch(`${BASE}/api/admin/validate-probe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-admin-token': process.env.ADMIN_TOKEN },
+      body: JSON.stringify({ text, field, numbers, place }),
+    });
+    return r.json();
+  };
+  const OUTDOOR = { stepFree: null, accessibleToilet: true, shelter: false };
+  const CASES = [
+    ['ベンチが多くて休みやすい公園です', 'note', ['95'], OUTDOOR, false, 'データの無い設備'],
+    ['静かで景色のよい場所です', 'note', ['95'], OUTDOOR, false, '収集していない主観'],
+    ['車椅子対応トイレが50m以内です', 'note', ['95'], OUTDOOR, false, '事実に無い数字'],
+    ['段差なしで安心して入れます', 'note', ['95'], OUTDOOR, false, '段差不明なのに言い切り'],
+    ['屋内なので雨をしのげます', 'note', ['95'], OUTDOOR, false, '屋外なのに屋内'],
+    ['天気は晴れです。トイレも近い', 'note', ['95'], OUTDOOR, false, '天気の混入'],
+    ['車椅子対応トイレが近くにあります', 'note', ['95'],
+      { stepFree: null, accessibleToilet: false, shelter: false }, false, '車椅子対応でないのに言及'],
+    ['トイレ', 'note', ['95'], OUTDOOR, false, '短すぎる'],
+    ['気晴らしに出かけましょう', 'headline', [], undefined, false, '気分の決めつけ'],
+    ['車椅子対応トイレが95m以内。段差解消あり', 'note', ['95'],
+      { stepFree: true, accessibleToilet: true, shelter: true }, true, '事実どおり'],
+    ['なら、トイレの近さで選びます。', 'headline', [], undefined, true, '正常な見出し'],
+  ];
+  // プラン全体の主張。1箇所でも段差不明なら見出しにも書けない
+  const PLAN_CASES = [
+    ['なら、段差なしの道を選びます。', 'headline',
+      { stepFree: false, accessibleToilet: true, shelter: false }, false, '段差不明を含むのに見出しで言い切り'],
+    ['なら、トイレの近さと段差の無さで選びます。', 'headline',
+      { stepFree: false, accessibleToilet: true, shelter: false }, false, '言い換えても段差の主張は通さない'],
+    ['なら、段差なしの道を選びます。', 'headline',
+      { stepFree: true, accessibleToilet: true, shelter: true }, true, '全箇所が段差解消あり'],
+  ];
+  for (const [text, field, planClaims, want, label] of PLAN_CASES) {
+    const r = await fetch(`${BASE}/api/admin/validate-probe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-admin-token': process.env.ADMIN_TOKEN },
+      body: JSON.stringify({ text, field, numbers: [], planClaims }),
+    }).then((x) => x.json());
+    ok(r.accepted === want, `検証 [${label}]: accepted=${r.accepted} (期待 ${want}) ${r.reason ?? ''}`);
+  }
+  for (const [text, field, numbers, place, want, label] of CASES) {
+    const r = await probe(text, field, numbers, place);
+    ok(r.accepted === want, `検証 [${label}]: accepted=${r.accepted} (期待 ${want}) ${r.reason ?? ''}`);
+  }
+  console.log(`検証(T-72)    ${CASES.length + PLAN_CASES.length} 件 OK`);
+} else {
+  console.log('検証(T-72)    ADMIN_TOKEN が無いので飛ばした');
 }
 
 // ---------- 入力の検査 ----------

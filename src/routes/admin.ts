@@ -13,6 +13,8 @@
  */
 import { Hono } from 'hono';
 import { EMBED_BATCH, embedAll, embedText, findBoilerplate } from '../lib/embed';
+import { FEEL_TONE, REASON_MODEL, SYSTEM_PROMPT } from '../../config/prompts';
+import { validate } from '../lib/reason';
 import type { Bindings } from '../types';
 
 /** 1リクエストで処理する件数。Worker の実行時間に収まる範囲で切る。 */
@@ -126,6 +128,97 @@ admin.get('/inspect/:id', async (c) => {
     storedInIndex: !!storedValues,
     cosineStoredVsFresh: cosine,
   });
+});
+
+/**
+ * 理由文のモデル応答を生で見る。T-71 の検算用。
+ *
+ * 「degraded.ai が立つが理由が分からない」を切り分けるためのもの。
+ * 生の応答・JSON として取れたか・検証の結果を並べて返す。
+ */
+admin.post('/reason-probe', async (c) => {
+  const expected = c.env.ADMIN_TOKEN;
+  if (!expected) return c.json({ error: 'unavailable' }, 503);
+  if (c.req.header('x-admin-token') !== expected) return c.json({ error: 'forbidden' }, 403);
+
+  const factSheet = `# 相手の状態
+体調: 体が痛い
+天気: 22° · くもり
+
+# プラン全体
+立ち寄り先: 2箇所
+総距離: 507m
+所要: 40分
+
+# 立ち寄り先
+## 1. 江東区深川江戸資料館
+車椅子対応トイレ: 95m以内にある
+屋内: あり（雨をしのげる）
+段差: 段差解消あり
+
+## 2. 江東区立白河一丁目公園
+面積: 1550㎡
+車椅子対応トイレ: 4m以内にある
+屋内: なし
+段差: 不明
+`;
+
+  const started = Date.now();
+  let raw: unknown;
+  let error: string | null = null;
+  try {
+    raw = await c.env.AI.run(REASON_MODEL as never, {
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: `${FEEL_TONE.achy}
+
+# 事実
+${factSheet}` },
+      ],
+      max_tokens: 400,
+      temperature: 0.4,
+    } as never);
+  } catch (e) {
+    error = e instanceof Error ? e.message : String(e);
+  }
+
+  return c.json({
+    elapsedMs: Date.now() - started,
+    error,
+    rawType: typeof raw,
+    rawKeys: raw && typeof raw === 'object' ? Object.keys(raw) : null,
+    raw,
+  });
+});
+
+/**
+ * 検証 (T-72) を外から叩く窓。**この安全装置が本当に効くかを試すためのもの。**
+ *
+ * 実装をコピーしたテストではなく、本番と同じ validate() を通す。
+ *   { "text": "ベンチが3つあります", "field": "note", "numbers": ["95"],
+ *     "place": { "stepFree": null, "accessibleToilet": true, "shelter": false } }
+ */
+admin.post('/validate-probe', async (c) => {
+  const body = await c.req.json().catch(() => null) as {
+    text?: unknown;
+    field?: 'headline' | 'title' | 'note';
+    numbers?: string[];
+    place?: { stepFree: boolean | null; accessibleToilet: boolean; shelter: boolean };
+    planClaims?: { stepFree: boolean; accessibleToilet: boolean; shelter: boolean };
+  } | null;
+  if (!body?.field) return c.json({ error: 'bad_request', message: 'field が必要' }, 400);
+
+  const place = body.place
+    ? ({ access: { ...body.place } } as unknown as Parameters<typeof validate>[1]['place'])
+    : undefined;
+
+  const r = validate(body.text, {
+    field: body.field,
+    numbers: new Set(body.numbers ?? []),
+    place,
+    planClaims: body.planClaims,
+  });
+  return c.json('ok' in r ? { accepted: true, text: r.ok } : { accepted: false, reason: r.reason });
 });
 
 /** 索引の状態。件数が D1 と合っているかを見る。 */

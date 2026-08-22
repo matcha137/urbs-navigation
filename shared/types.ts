@@ -146,6 +146,11 @@ export interface SuggestRequest {
   at?: string;
   /** true でデモ用の固定条件を使う (T-91)。 */
   demo?: boolean;
+  /**
+   * true で理由文の生成を意図的に飛ばし、ルールベースに落とす (T-73)。
+   * 「AI が落ちたときにどう見えるか」を本番でリハーサルするためのもの。
+   */
+  simulateAiOutage?: boolean;
 }
 
 /** 外部依存が落ちた時にどこを縮退したか。UI はこれを見て注記を出す (T-39)。 */
@@ -162,6 +167,11 @@ export interface SuggestResponse {
   weather: WeatherSnapshot;
   degraded: DegradedFlags;
   generatedAt: string;
+  /**
+   * 生成した文が検証 (T-72) で落ちた理由。落ちた分はルールベースの文に戻っている。
+   * 空なら全部そのまま採用された。**画面に出すものではなくデバッグ用**。
+   */
+  aiRejected?: string[];
 }
 
 export interface PlacesQuery {
