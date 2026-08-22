@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tokyo-outings",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    // "none" にしておくと未マッチのパスは Worker に流れる。
+    // フロントを SPA ビルドに差し替える時点で "single-page-application" +
+    // run_worker_first: ["/api/*"] に変更する (T-57)。
+    "not_found_handling": "none"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tokyo_outings",
+      "database_id": "f6d47cd4-3269-46b4-bdb4-fb757d276255"
+    }
+  ],
+  "observability": { "enabled": true }
+}

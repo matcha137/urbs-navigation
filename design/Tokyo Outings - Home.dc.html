@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="stylesheet" href="_ds/organic-bf48816a-a3e1-4aa0-94c8-101438e52fba/styles.css"><script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.min.js"></script><style>body{margin:0;background:#e6dcc9;font-family:Figtree,system-ui,sans-serif}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#201e1d;color:#f5ead8;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Figtree,system-ui,sans-serif;color:#201e1d}.dv-opts{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px;max-width:390px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(32,30,29,.1);color:#201e1d;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:600 12px/1.3 Figtree,system-ui,sans-serif;color:#201e1d}.dv-onote{font:400 11.5px/1.45 Figtree,system-ui,sans-serif;color:rgba(32,30,29,.6);margin:0 0 4px}.dv-opt:target .dv-oid{background:#c67139;color:#f5ead8}.dv-next{margin:26px 0 0;font:12px/1.6 Figtree,system-ui,sans-serif;color:rgba(32,30,29,.6)}.phone{width:390px;height:800px;border-radius:44px;background:#f5ead8;box-shadow:0 12px 32px rgba(46,43,37,.22);overflow:hidden;display:flex;flex-direction:column;position:relative}.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}.scroll::-webkit-scrollbar{width:0}</style></helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Home screen — three directions</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>The plan is already made</div>
+<p class="dv-onote">Opens with today's outing fully assembled. The feel row is a correction, not a gate — tap it and the plan rewrites itself.</p>
+<div class="phone">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px 4px;font-size:13px;font-weight:600;color:#201e1d">
+    <span>9:41</span><span style="display:flex;gap:6px;align-items:center;opacity:.7"><i data-lucide="signal" style="width:15px;height:15px"></i><i data-lucide="battery-full" style="width:19px;height:19px"></i></span>
+  </div>
+  <div class="scroll">
+    <div style="padding:14px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.55)">Tue 22 Aug · Bunkyo</span>
+      <span style="width:36px;height:36px;border-radius:999px;background:#ccdbb2;display:grid;place-items:center;font-size:13px;font-weight:700;color:#3d472b">M</span>
+    </div>
+    <div style="padding:16px 24px 0">
+      <span class="tag tag-accent-2" style="font-size:13px;padding:7px 14px;gap:7px"><i data-lucide="cloud-drizzle" style="width:16px;height:16px;margin-right:6px"></i>18° · light rain, clearing by 2pm</span>
+      <h1 style="font-family:Caprasimo,serif;font-size:31px;line-height:1.12;margin:16px 0 0;letter-spacing:-.015em;text-wrap:pretty">Today looks good for the riverside.</h1>
+      <p style="font-size:15px;line-height:1.5;color:rgba(32,30,29,.7);margin:10px 0 0">Flat paths, a bench every hundred metres, and shelter if the rain comes back.</p>
+    </div>
+
+    <div style="padding:22px 24px 0">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px">How are you today?</div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px">
+        <sc-for list="{{ feels }}" as="f" hint-placeholder-count="4">
+          <button style="{{ f.style }}" onClick="{{ f.onClick }}">{{ f.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="margin:20px 20px 0;background:#ebddc5;border-radius:32px;padding:22px 20px 20px">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8c491a;font-weight:600">Today's outing</div>
+      <h2 style="font-family:Caprasimo,serif;font-size:22px;line-height:1.2;margin:8px 0 4px">{{ plan.title }}</h2>
+      <div style="font-size:13.5px;color:rgba(32,30,29,.65);margin-bottom:18px">{{ plan.summary }}</div>
+      <sc-for list="{{ plan.stops }}" as="s" hint-placeholder-count="3">
+        <div style="display:flex;gap:14px;align-items:stretch">
+          <div style="width:14px;display:flex;flex-direction:column;align-items:center;padding-top:5px">
+            <span style="width:13px;height:13px;border-radius:999px;background:#c67139;flex:none"></span>
+            <span style="{{ s.rail }}"></span>
+          </div>
+          <div style="flex:1;padding-bottom:18px">
+            <div style="display:flex;gap:10px;align-items:baseline">
+              <span style="font-size:13px;font-weight:700;color:#8c491a;font-variant-numeric:tabular-nums">{{ s.time }}</span>
+              <span style="font-size:17px;font-weight:700;line-height:1.25">{{ s.name }}</span>
+            </div>
+            <div style="font-size:14px;line-height:1.5;color:rgba(32,30,29,.72);margin-top:3px">{{ s.note }}</div>
+            <div style="font-size:12.5px;color:#56633f;margin-top:6px;font-weight:600">{{ s.meta }}</div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="display:flex;gap:16px;padding-top:4px;border-top:1px solid rgba(32,30,29,.12);margin-top:2px">
+        <div style="padding-top:12px;font-size:13px;color:rgba(32,30,29,.7)">{{ plan.footer }}</div>
+      </div>
+    </div>
+
+    <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-primary" style="min-height:52px;font-size:17px">Start this outing</button>
+      <button class="btn btn-secondary" style="min-height:48px;font-size:15px;font-family:Figtree,sans-serif;font-weight:600">Show me somewhere else</button>
+    </div>
+    <div style="height:26px"></div>
+  </div>
+  <div style="display:flex;justify-content:space-around;align-items:center;padding:10px 8px 22px;background:#ebddc5;border-top:1px solid rgba(32,30,29,.08)">
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:#c67139;min-width:64px;min-height:44px;justify-content:center"><i data-lucide="sun" style="width:23px;height:23px"></i>Today</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="map" style="width:23px;height:23px"></i>Nearby</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="footprints" style="width:23px;height:23px"></i>Been</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="user-round" style="width:23px;height:23px"></i>You</span>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>It asks before it tells</div>
+<p class="dv-onote">The whole screen is one question. Answering is the interaction — the plan grows underneath it and the question folds up into a line you can change.</p>
+<div class="phone">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px 4px;font-size:13px;font-weight:600;color:#201e1d">
+    <span>9:41</span><span style="display:flex;gap:6px;align-items:center;opacity:.7"><i data-lucide="signal" style="width:15px;height:15px"></i><i data-lucide="battery-full" style="width:19px;height:19px"></i></span>
+  </div>
+  <div class="scroll">
+    <sc-if value="{{ askingB }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:40px 28px 0">
+        <div style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:26px">Tuesday afternoon · 18° · rain easing</div>
+        <h1 style="font-family:Caprasimo,serif;font-size:40px;line-height:1.08;margin:0;letter-spacing:-.02em;text-wrap:pretty">How is your body today?</h1>
+        <p style="font-size:16px;line-height:1.55;color:rgba(32,30,29,.7);margin:14px 0 0">One tap. Everything after this bends around your answer.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px">
+          <sc-for list="{{ feelsB }}" as="f" hint-placeholder-count="4">
+            <button style="{{ f.bigStyle }}" onClick="{{ f.onClick }}">
+              <span style="font-family:Caprasimo,serif;font-size:19px;line-height:1.15">{{ f.label }}</span>
+              <span style="font-size:12.5px;line-height:1.4;opacity:.72;font-weight:500">{{ f.hint }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:24px;font-size:15px;font-family:Figtree,sans-serif;font-weight:600;min-height:44px">Same as yesterday →</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ answeredB }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:22px 24px 0">
+        <button style="display:flex;align-items:center;gap:10px;width:100%;background:#ebddc5;border:0;border-radius:999px;padding:12px 18px;min-height:48px;cursor:pointer;text-align:left" onClick="{{ resetB }}">
+          <i data-lucide="circle-check" style="width:19px;height:19px;color:#728157"></i>
+          <span style="flex:1;font-size:14.5px;font-weight:600;color:#201e1d">Today: {{ answerB }}</span>
+          <span style="font-size:13px;color:#8c491a;font-weight:700">Change</span>
+        </button>
+        <h1 style="font-family:Caprasimo,serif;font-size:30px;line-height:1.14;margin:22px 0 0;letter-spacing:-.015em;text-wrap:pretty">{{ planB.head }}</h1>
+        <p style="font-size:15.5px;line-height:1.55;color:rgba(32,30,29,.72);margin:12px 0 0">{{ planB.sub }}</p>
+      </div>
+      <div style="margin:20px 20px 0;border-radius:32px;overflow:hidden;background:#ebddc5">
+        <div style="height:150px;background:repeating-linear-gradient(135deg,#dcd3c4 0 10px,#e6dcc9 10px 20px);display:grid;place-items:center">
+          <span style="font:600 11.5px ui-monospace,Menlo,monospace;color:#645c50;letter-spacing:.04em;text-align:center;padding:0 20px">photo — the first stop, washed</span>
+        </div>
+        <div style="padding:18px 20px 20px">
+          <sc-for list="{{ planB.stops }}" as="s" hint-placeholder-count="3">
+            <div style="{{ s.rowStyle }}">
+              <span style="width:30px;height:30px;border-radius:999px;background:#f5ead8;display:grid;place-items:center;font-size:13px;font-weight:700;color:#8c491a;flex:none">{{ s.n }}</span>
+              <div style="flex:1">
+                <div style="font-size:16.5px;font-weight:700;line-height:1.3">{{ s.name }}</div>
+                <div style="font-size:13.5px;line-height:1.45;color:rgba(32,30,29,.68);margin-top:2px">{{ s.note }}</div>
+              </div>
+              <span style="font-size:13px;font-weight:600;color:#56633f;white-space:nowrap;padding-top:2px">{{ s.mins }}</span>
+            </div>
+          </sc-for>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+            <sc-for list="{{ planB.tags }}" as="t" hint-placeholder-count="3">
+              <span class="tag tag-neutral" style="font-size:12.5px;padding:6px 12px">{{ t }}</span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-primary" style="min-height:52px;font-size:17px">Take me there</button>
+        <button class="btn btn-secondary" style="min-height:48px;font-size:15px;font-family:Figtree,sans-serif;font-weight:600">A quieter option</button>
+      </div>
+      <div style="height:26px"></div>
+    </sc-if>
+  </div>
+  <div style="display:flex;justify-content:space-around;align-items:center;padding:10px 8px 22px;background:#ebddc5;border-top:1px solid rgba(32,30,29,.08)">
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:#c67139;min-width:64px;min-height:44px;justify-content:center"><i data-lucide="sun" style="width:23px;height:23px"></i>Today</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="map" style="width:23px;height:23px"></i>Nearby</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="footprints" style="width:23px;height:23px"></i>Been</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="user-round" style="width:23px;height:23px"></i>You</span>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Sorted by how much it will cost you</div>
+<p class="dv-onote">Framing is effort, not place. You set today's budget on the dial and the outings re-sort — every card is honest about steps, stairs and seats.</p>
+<div class="phone">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px 4px;font-size:13px;font-weight:600;color:#201e1d">
+    <span>9:41</span><span style="display:flex;gap:6px;align-items:center;opacity:.7"><i data-lucide="signal" style="width:15px;height:15px"></i><i data-lucide="battery-full" style="width:19px;height:19px"></i></span>
+  </div>
+  <div class="scroll">
+    <div style="padding:16px 24px 0">
+      <h1 style="font-family:Caprasimo,serif;font-size:29px;line-height:1.14;margin:0;letter-spacing:-.015em">Three outings within reach</h1>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:rgba(32,30,29,.7)">
+        <i data-lucide="cloud-drizzle" style="width:17px;height:17px;color:#728157"></i>18°, rain easing by 2pm — all three stay dry
+      </div>
+    </div>
+    <div style="padding:20px 24px 0">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px">Today I have energy for…</div>
+      <div style="display:flex;gap:8px">
+        <sc-for list="{{ efforts }}" as="e" hint-placeholder-count="3">
+          <button style="{{ e.style }}" onClick="{{ e.onClick }}">{{ e.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ outings }}" as="o" hint-placeholder-count="3">
+        <div style="background:#ebddc5;border-radius:32px;padding:18px 20px 18px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div style="flex:1">
+              <div style="font-family:Caprasimo,serif;font-size:21px;line-height:1.2">{{ o.title }}</div>
+              <div style="font-size:13.5px;color:rgba(32,30,29,.65);margin-top:3px">{{ o.where }}</div>
+            </div>
+            <span style="{{ o.badgeStyle }}">{{ o.effort }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <sc-for list="{{ o.dots }}" as="d" hint-placeholder-count="5">
+              <span style="{{ d.style }}"></span>
+            </sc-for>
+            <span style="font-size:12.5px;color:rgba(32,30,29,.6);margin-left:4px">{{ o.effortNote }}</span>
+          </div>
+          <div style="font-size:14.5px;line-height:1.5;color:rgba(32,30,29,.8)">{{ o.body }}</div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;font-weight:600;color:#56633f;padding-top:2px">
+            <span>{{ o.steps }}</span><span>{{ o.seats }}</span><span>{{ o.access }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="padding:18px 20px 0">
+      <button class="btn btn-secondary" style="width:100%;min-height:48px;font-size:15px;font-family:Figtree,sans-serif;font-weight:600">Somewhere I haven't been</button>
+    </div>
+    <div style="height:26px"></div>
+  </div>
+  <div style="display:flex;justify-content:space-around;align-items:center;padding:10px 8px 22px;background:#ebddc5;border-top:1px solid rgba(32,30,29,.08)">
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:#c67139;min-width:64px;min-height:44px;justify-content:center"><i data-lucide="sun" style="width:23px;height:23px"></i>Today</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="map" style="width:23px;height:23px"></i>Nearby</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="footprints" style="width:23px;height:23px"></i>Been</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:rgba(32,30,29,.55);min-width:64px;min-height:44px;justify-content:center"><i data-lucide="user-round" style="width:23px;height:23px"></i>You</span>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">All three are live — tap the feel pills in <a class="dv-oid" href="#1a">1a</a> and <a class="dv-oid" href="#1b">1b</a>, and the effort dial in <a class="dv-oid" href="#1c">1c</a>. Try next: "<a class="dv-oid" href="#1a">1a</a> but with the check-in as a sheet" · "give <a class="dv-oid" href="#1c">1c</a> a map" · "push <a class="dv-oid" href="#1b">1b</a> further"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1360,&quot;height&quot;:1000}}">
+const FEELS = [
+  {id:'good', label:'Pretty good', hint:'Up for a proper walk'},
+  {id:'tired', label:'A bit tired', hint:'Short and flat, please'},
+  {id:'achy', label:'Achy today', hint:'No stairs, frequent rests'},
+  {id:'low', label:'Low energy', hint:'Close to home, sitting down'}
+];
+
+const PLANS_A = {
+  good: {title:'Sumida riverside, the flat way', summary:'1.9 km · about an hour · starts 8 min from your door',
+    stops:[
+      {time:'14:00', name:'Kiyosumi Gardens', note:'Loop the pond anticlockwise. The stepping stones stay above water after rain.', meta:'Step-free · benches every 100 m'},
+      {time:'14:40', name:'Fukagawa shopping street', note:'Covered the whole length, so it works if the drizzle comes back.', meta:'Sheltered · public toilet halfway'},
+      {time:'15:20', name:'Kissa Sanwa', note:'Sit-down finish. Barley tea and a window onto the canal.', meta:'Ground floor · usually a free seat'}
+    ], footer:'≈ 3,100 steps · 3 places to sit down · bus 陽20 home from the door'},
+  tired: {title:'The short pond loop', summary:'800 m · about 35 min · one bus stop away',
+    stops:[
+      {time:'14:10', name:'Kiyosumi Gardens', note:'Half the loop is enough — the teahouse side is the pretty one.', meta:'Step-free · bench at every corner'},
+      {time:'14:45', name:'Kissa Sanwa', note:'Ten minutes of sitting before you head back.', meta:'Ground floor · quiet on weekdays'}
+    ], footer:'≈ 1,200 steps · sit whenever you like · 6 min back to the bus'},
+  achy: {title:'Canal side, no stairs at all', summary:'700 m · about 40 min · lift-served the whole way',
+    stops:[
+      {time:'14:15', name:'Onagi riverside deck', note:'One continuous ramp, wide enough to pass. Handrail on the water side.', meta:'Step-free · handrails · 5 benches'},
+      {time:'14:50', name:'Fukagawa community lounge', note:'Warm room, armchairs, nobody minds how long you stay.', meta:'Level entry · accessible toilet'}
+    ], footer:'≈ 950 steps · rest every 80 m · taxi rank outside the lounge'},
+  low: {title:'Ten minutes of green', summary:'300 m · as long as you like · at the end of your street',
+    stops:[
+      {time:'Any time', name:'Sengoku pocket garden', note:'Two benches under the zelkova. Enough sky to count as being out.', meta:'Step-free · 40 m from your door'}
+    ], footer:'≈ 400 steps · that counts · tomorrow can be longer'}
+};
+
+const PLANS_B = {
+  good: {head:'Then let’s use the good weather.', sub:'Rain stops at two. The riverside path dries fast and it will be quiet on a Tuesday.',
+    stops:[{n:1,name:'Kiyosumi Gardens',note:'Full pond loop, teahouse side first',mins:'25 min'},{n:2,name:'Fukagawa street',note:'Covered lane, snacks halfway',mins:'20 min'},{n:3,name:'Kissa Sanwa',note:'Sit-down finish by the canal',mins:'stay'}],
+    tags:['1.9 km','≈3,100 steps','Step-free','3 places to sit']},
+  tired: {head:'Then short, flat, and near a bus.', sub:'Half a loop and a long sit. You can be home in forty minutes if you want to be.',
+    stops:[{n:1,name:'Kiyosumi Gardens',note:'Teahouse half of the pond only',mins:'15 min'},{n:2,name:'Kissa Sanwa',note:'Barley tea, window seat',mins:'stay'}],
+    tags:['800 m','≈1,200 steps','Bus at the gate']},
+  achy: {head:'Then nothing that asks you to climb.', sub:'A ramped deck along the canal, handrail the whole way, and a warm room at the end.',
+    stops:[{n:1,name:'Onagi riverside deck',note:'Continuous ramp, benches every 80 m',mins:'20 min'},{n:2,name:'Fukagawa lounge',note:'Armchairs, accessible toilet',mins:'stay'}],
+    tags:['700 m','No stairs','Handrails','Accessible WC']},
+  low: {head:'Then just the end of the street.', sub:'Ten minutes under the zelkova still counts as being outside. Tomorrow can be longer.',
+    stops:[{n:1,name:'Sengoku pocket garden',note:'Two benches, 40 m from your door',mins:'10 min'}],
+    tags:['300 m','Step-free','Home in 2 min']}
+};
+
+const OUTINGS = [
+  {id:'o1', tier:1, title:'Ten minutes of green', where:'Sengoku · end of your street', effort:'Very easy', effortNote:'sit whenever',
+   body:'Two benches under a big zelkova. Enough sky and air to change the day, without a journey attached.',
+   steps:'≈400 steps', seats:'2 benches', access:'Step-free'},
+  {id:'o2', tier:2, title:'The canal ramp walk', where:'Onagi river · one bus stop', effort:'Easy', effortNote:'rest every 80 m',
+   body:'A wide, continuous ramp beside the water with a handrail all the way, finishing in a warm community lounge.',
+   steps:'≈950 steps', seats:'5 benches', access:'No stairs'},
+  {id:'o3', tier:2, title:'Half the pond', where:'Kiyosumi Gardens', effort:'Easy', effortNote:'benches at every corner',
+   body:'The teahouse side of the loop, then a window seat at Kissa Sanwa. Gravel is firm and level after rain.',
+   steps:'≈1,200 steps', seats:'8 benches', access:'Step-free'},
+  {id:'o4', tier:3, title:'Riverside, the long way', where:'Kiyosumi → Fukagawa → Sumida', effort:'Moderate', effortNote:'one gentle slope',
+   body:'The full pond loop, the covered shopping street, and a finish looking out at the canal. About an hour of moving.',
+   steps:'≈3,100 steps', seats:'3 cafés', access:'Step-free · one slope'}
+];
+
+class Component extends DCLogic {
+  state = { feelA: 'good', feelB: null, tier: 2 };
+
+  componentDidMount() { this.icons(); }
+  componentDidUpdate() { this.icons(); }
+  icons() { if (window.lucide) window.lucide.createIcons(); else setTimeout(() => window.lucide && window.lucide.createIcons(), 300); }
+
+  renderVals() {
+    const s = this.state;
+    const pill = (on) => `min-height:46px;padding:11px 18px;border-radius:999px;cursor:pointer;font-family:Figtree,sans-serif;font-size:14.5px;font-weight:600;border:1px solid ${on ? '#c67139' : 'rgba(32,30,29,.16)'};background:${on ? '#c67139' : 'transparent'};color:${on ? '#f5ead8' : '#201e1d'}`;
+
+    const feels = FEELS.map(f => ({
+      label: f.label, style: pill(s.feelA === f.id) + ';white-space:nowrap',
+      onClick: () => this.setState({ feelA: f.id })
+    }));
+
+    const feelsB = FEELS.map(f => ({
+      label: f.label, hint: f.hint,
+      bigStyle: 'display:flex;flex-direction:column;gap:6px;text-align:left;align-items:flex-start;padding:18px 18px 20px;min-height:112px;border:0;border-radius:28px;cursor:pointer;background:#ebddc5;color:#201e1d;font-family:Figtree,sans-serif',
+      onClick: () => this.setState({ feelB: f.id })
+    }));
+
+    const planA = PLANS_A[s.feelA];
+    const plan = {
+      title: planA.title, summary: planA.summary, footer: planA.footer,
+      stops: planA.stops.map((st, i) => ({
+        ...st,
+        rail: `flex:1;width:2px;background:${i === planA.stops.length - 1 ? 'transparent' : 'rgba(32,30,29,.18)'};margin-top:4px`
+      }))
+    };
+
+    const answered = !!s.feelB;
+    const pb = answered ? PLANS_B[s.feelB] : null;
+    const planB = answered ? {
+      head: pb.head, sub: pb.sub, tags: pb.tags,
+      stops: pb.stops.map((st, i) => ({
+        ...st,
+        rowStyle: `display:flex;gap:12px;align-items:flex-start;padding:12px 0;${i ? 'border-top:1px solid rgba(32,30,29,.12)' : 'padding-top:0'}`
+      }))
+    } : { head: '', sub: '', tags: [], stops: [] };
+
+    const tiers = [{ n: 1, label: 'Very little' }, { n: 2, label: 'A short walk' }, { n: 3, label: 'A proper outing' }];
+    const efforts = tiers.map(t => ({
+      label: t.label, style: pill(s.tier === t.n) + ';flex:1;padding-inline:8px;font-size:13.5px',
+      onClick: () => this.setState({ tier: t.n })
+    }));
+
+    const outings = OUTINGS.filter(o => o.tier <= s.tier).map(o => ({
+      ...o,
+      badgeStyle: `flex:none;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;background:${o.tier === 3 ? '#ffe1d0' : '#e1eecc'};color:${o.tier === 3 ? '#8c491a' : '#3d472b'}`,
+      dots: [1, 2, 3, 4, 5].map(i => ({
+        style: `width:9px;height:9px;border-radius:999px;background:${i <= o.tier + 1 ? '#728157' : 'rgba(32,30,29,.15)'}`
+      }))
+    }));
+
+    return {
+      feels, feelsB, plan, planB, efforts, outings,
+      askingB: !answered, answeredB: answered,
+      answerB: answered ? FEELS.find(f => f.id === s.feelB).label : '',
+      resetB: () => this.setState({ feelB: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

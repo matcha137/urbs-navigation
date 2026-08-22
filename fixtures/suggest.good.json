@@ -1,0 +1,115 @@
+{
+  "plan": {
+    "id": "plan-good-1",
+    "title": "清澄から深川へ、川ぞいの道",
+    "summary": "1.9 km · 1時間ほど · 家から徒歩8分で始まる",
+    "headline": "なら、雨上がりを使いましょう。",
+    "stops": [
+      {
+        "order": 1,
+        "placeId": "park:kiyosumi",
+        "name": "清澄庭園",
+        "note": "池を一周。雨のあとは砂利が締まって歩きやすい",
+        "stayLabel": "25分",
+        "lat": 35.6816,
+        "lng": 139.7975
+      },
+      {
+        "order": 2,
+        "placeId": "street:fukagawa",
+        "name": "深川資料館通り",
+        "note": "屋根のある商店街。途中で甘いものが買える",
+        "stayLabel": "20分",
+        "lat": 35.68,
+        "lng": 139.799
+      },
+      {
+        "order": 3,
+        "placeId": "cafe:sanwa",
+        "name": "喫茶三和",
+        "note": "運河を見ながら座って終わる",
+        "stayLabel": "ゆっくり",
+        "lat": 35.6789,
+        "lng": 139.801
+      }
+    ],
+    "tags": [
+      "1.9 km",
+      "≈3,100歩",
+      "段差なし",
+      "座れる場所3つ"
+    ],
+    "footer": "≈3,100歩 · 座れる場所3つ · 帰りはバス陽20が門前から",
+    "totalDistanceM": 1900,
+    "estimatedSteps": 3100,
+    "estimatedMinutes": 60,
+    "sources": [
+      {
+        "datasetName": "（サンプル）都立公園一覧",
+        "publisher": "東京都",
+        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/",
+        "license": "CC BY 4.0",
+        "retrievedAt": "2026-08-22T00:00:00.000Z"
+      }
+    ]
+  },
+  "alternatives": [
+    {
+      "id": "plan-tired-1-alt",
+      "title": "池の短い方の回り道",
+      "summary": "800 m · 35分ほど · バスで一区間",
+      "headline": "なら、短く平らに、バス停の近くで。",
+      "stops": [
+        {
+          "order": 1,
+          "placeId": "park:kiyosumi",
+          "name": "清澄庭園",
+          "note": "茶室側の半周だけ。ベンチが多い方",
+          "stayLabel": "15分",
+          "lat": 35.6816,
+          "lng": 139.7975
+        },
+        {
+          "order": 2,
+          "placeId": "cafe:sanwa",
+          "name": "喫茶三和",
+          "note": "麦茶と窓ぎわの席",
+          "stayLabel": "ゆっくり",
+          "lat": 35.6789,
+          "lng": 139.801
+        }
+      ],
+      "tags": [
+        "800 m",
+        "≈1,200歩",
+        "バス停が門前"
+      ],
+      "footer": "≈1,200歩 · いつでも座れる · バスまで徒歩6分",
+      "totalDistanceM": 800,
+      "estimatedSteps": 1200,
+      "estimatedMinutes": 35,
+      "sources": [
+        {
+          "datasetName": "（サンプル）都立公園一覧",
+          "publisher": "東京都",
+          "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/",
+          "license": "CC BY 4.0",
+          "retrievedAt": "2026-08-22T00:00:00.000Z"
+        }
+      ]
+    }
+  ],
+  "weather": {
+    "tempC": 18,
+    "condition": "rain",
+    "summary": "18° · 小雨、14時には上がる",
+    "rainStopsAt": "14:00",
+    "observedAt": "2026-08-22T09:41:00.000Z"
+  },
+  "degraded": {
+    "weather": false,
+    "ai": false,
+    "vector": false
+  },
+  "generatedAt": "2026-08-22T09:41:00.000Z"
+}

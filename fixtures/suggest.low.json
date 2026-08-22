@@ -1,0 +1,51 @@
+{
+  "plan": {
+    "id": "plan-low-1",
+    "title": "通りの端の、10分の緑",
+    "summary": "300 m · 好きなだけ · 家の前の道の先",
+    "headline": "なら、通りの端まででいい。",
+    "stops": [
+      {
+        "order": 1,
+        "placeId": "park:sengoku-pocket",
+        "name": "千石ポケットガーデン",
+        "note": "けやきの下にベンチが2つ。家から40m",
+        "stayLabel": "10分",
+        "lat": 35.728,
+        "lng": 139.742
+      }
+    ],
+    "tags": [
+      "300 m",
+      "段差なし",
+      "2分で帰れる"
+    ],
+    "footer": "≈400歩 · それでも外に出たことになる · 明日はもっと長くていい",
+    "totalDistanceM": 300,
+    "estimatedSteps": 400,
+    "estimatedMinutes": 15,
+    "sources": [
+      {
+        "datasetName": "（サンプル）都立公園一覧",
+        "publisher": "東京都",
+        "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/",
+        "license": "CC BY 4.0",
+        "retrievedAt": "2026-08-22T00:00:00.000Z"
+      }
+    ]
+  },
+  "alternatives": [],
+  "weather": {
+    "tempC": 18,
+    "condition": "rain",
+    "summary": "18° · 小雨、14時には上がる",
+    "rainStopsAt": "14:00",
+    "observedAt": "2026-08-22T09:41:00.000Z"
+  },
+  "degraded": {
+    "weather": false,
+    "ai": false,
+    "vector": false
+  },
+  "generatedAt": "2026-08-22T09:41:00.000Z"
+}
