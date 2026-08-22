@@ -1,4 +1,5 @@
 import type { FeelId, WeatherCondition } from '../shared/types';
+import seatingConfig from './seating-tiers.json';
 
 /**
  * 体調 → 数値パラメータの変換表。
@@ -42,12 +43,7 @@ export const DATA_GAPS = {
  * 閾値は江東区の公園173件の実分布に合わせてある:
  *   min 114㎡ / p25 986㎡ / 中央値 1,690㎡ / p75 3,150㎡ / p90 12,691㎡ / max 152,998㎡
  */
-export const SEATING_AREA_TIERS = [
-  { minAreaM2: 10000, tier: 3, label: '座れる場所が多そう' },   // 20/173件
-  { minAreaM2: 3000,  tier: 2, label: '座れる場所がありそう' }, // 47/173件
-  { minAreaM2: 1000,  tier: 1, label: '小さな公園' },           // 128/173件
-  { minAreaM2: 0,     tier: 0, label: '広さの情報なし' },
-] as const;
+export const SEATING_AREA_TIERS = seatingConfig.tiers;
 
 export interface SeatingEstimate {
   tier: 0 | 1 | 2 | 3;
@@ -58,7 +54,7 @@ export interface SeatingEstimate {
 
 export function seatingTierFromArea(areaM2: number | null | undefined): SeatingEstimate {
   if (areaM2 == null || !(areaM2 > 0)) {
-    return { tier: 0, label: '広さの情報なし', confidence: 'unknown' };
+    return { tier: 0, label: '広さの情報なし', confidence: 'unknown' }; // 面積が不明な場合のみ
   }
   const hit = SEATING_AREA_TIERS.find((t) => areaM2 >= t.minAreaM2)!;
   return { tier: hit.tier as SeatingEstimate['tier'], label: hit.label, confidence: 'inferred' };
@@ -126,7 +122,10 @@ export interface FeelProfile {
 }
 
 /** 公園にトイレ・施設の属性を結合する半径。T-12 で実測して決めた値 (docs/datasets.md)。 */
-export const TOILET_JOIN_RADIUS_M = 200;
+export const TOILET_JOIN_RADIUS_M = seatingConfig.toiletJoinRadiusM;
+
+/** 同一の場所とみなす距離。公園が2データセットに重複しているため必要 (T-16)。 */
+export const DEDUPE_RADIUS_M = seatingConfig.dedupeRadiusM;
 
 export const FEELS: Record<FeelId, FeelProfile> = {
   good: {

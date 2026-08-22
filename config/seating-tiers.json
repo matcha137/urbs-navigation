@@ -1,0 +1,11 @@
+{
+  "_comment": "ETL (etl/03-normalize.mjs) と API (config/feels.ts) の両方が読む唯一の正。片方だけ書き換えると seed と実行時のスコアがズレる。閾値は江東区173公園の実分布に合わせてある: min 114 / p25 986 / 中央値 1690 / p75 3150 / p90 12691 / max 152998",
+  "toiletJoinRadiusM": 200,
+  "dedupeRadiusM": 100,
+  "tiers": [
+    { "minAreaM2": 10000, "tier": 3, "label": "座れる場所が多そう" },
+    { "minAreaM2": 3000,  "tier": 2, "label": "座れる場所がありそう" },
+    { "minAreaM2": 1000,  "tier": 1, "label": "小さな公園" },
+    { "minAreaM2": 0,     "tier": 0, "label": "広くはない場所" }
+  ]
+}
