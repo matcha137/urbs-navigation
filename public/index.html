@@ -2,27 +2,95 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tokyo Outings</title>
-<style>
-  :root { --bg:#e6dcc9; --card:#f5ead8; --ink:#201e1d; --accent:#c67139; }
-  body { margin:0; min-height:100vh; display:grid; place-items:center;
-         background:var(--bg); color:var(--ink);
-         font-family:Figtree,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif; }
-  .card { background:var(--card); padding:40px 44px; border-radius:28px; max-width:420px;
-          box-shadow:0 12px 32px rgba(46,43,37,.18); }
-  h1 { font-size:28px; line-height:1.15; margin:0 0 10px; letter-spacing:-.015em; }
-  p { margin:0 0 18px; font-size:14.5px; line-height:1.6; color:rgba(32,30,29,.7); }
-  code { background:rgba(32,30,29,.08); padding:2px 6px; border-radius:5px; font-size:13px; }
-  .dot { display:inline-block; width:8px; height:8px; border-radius:50%;
-         background:var(--accent); margin-right:8px; vertical-align:middle; }
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>今日、どこまで行けますか</title>
+<meta name="description" content="その日の体調から、東京都江東区の行き先を組み立てます。東京都オープンデータを使っています。">
+<meta name="theme-color" content="#e6dcc9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@600&display=swap">
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="card">
-    <h1><span class="dot"></span>hello</h1>
-    <p>Tokyo Outings の足場が本番に載りました。API の疎通は <code>/api/health</code> で確認できます。</p>
-    <p>次: T-04 D1 作成 → T-05 スキーマ適用 → P1 ETL</p>
-  </div>
+
+<!-- 読み込み中に何も無い画面を出さない -->
+<div id="boot" class="boot"><span class="boot-dot"></span>読み込んでいます</div>
+
+<main id="app" hidden>
+
+  <header class="top">
+    <p class="top-when" id="when">今日</p>
+    <p class="top-weather" id="weather"></p>
+  </header>
+
+  <!-- ===== 問い (T-53) ============================================ -->
+  <section id="ask" class="ask" aria-labelledby="ask-title">
+    <h1 class="ask-title" id="ask-title">今日、体はどうですか？</h1>
+    <p class="ask-sub">ひとつ選ぶだけです。このあとの全部が、その答えに合わせて変わります。</p>
+    <div class="feels" id="feels" role="group" aria-labelledby="ask-title"></div>
+  </section>
+
+  <!-- 答えたあとに畳まれる1行 -->
+  <section id="answered" class="answered" hidden>
+    <p class="answered-line">
+      今日は <strong id="answered-label"></strong>
+    </p>
+    <button type="button" class="link" id="change">変更する</button>
+  </section>
+
+  <!-- ===== プラン (T-54) ========================================== -->
+  <section id="plan" class="plan" hidden aria-live="polite" aria-busy="false">
+
+    <p class="plan-headline" id="plan-headline"></p>
+    <h2 class="plan-title" id="plan-title"></h2>
+    <p class="plan-summary" id="plan-summary"></p>
+
+    <ul class="tags" id="plan-tags"></ul>
+
+    <ol class="stops" id="stops"></ol>
+
+    <p class="plan-footer" id="plan-footer"></p>
+
+    <div class="actions">
+      <button type="button" class="btn btn-alt" id="another" hidden>別の場所を見せて</button>
+    </div>
+
+    <!-- 縮退の注記 (T-58) -->
+    <div class="notes" id="degraded" hidden></div>
+  </section>
+
+  <!-- 候補が無い / 通信できない -->
+  <section id="empty" class="empty" hidden>
+    <p id="empty-message"></p>
+    <button type="button" class="btn" id="retry">もう一度ためす</button>
+  </section>
+
+  <!-- ===== 自然文検索 (T-56) ====================================== -->
+  <!-- デモの本線には出さない。開いた人だけが使える保険 -->
+  <details class="search" id="search">
+    <summary>ことばで探す</summary>
+    <form id="search-form" class="search-form">
+      <label class="sr-only" for="search-q">探したいこと</label>
+      <input id="search-q" name="q" type="search" autocomplete="off"
+             placeholder="雨でも濡れないところ" maxlength="200">
+      <button type="submit" class="btn btn-small">探す</button>
+    </form>
+    <p class="search-intent" id="search-intent" hidden></p>
+    <ul class="search-results" id="search-results"></ul>
+  </details>
+
+  <!-- ===== 出典 (T-59) ============================================ -->
+  <footer class="sources" id="sources" hidden>
+    <h2 class="sources-title">このプランの出典</h2>
+    <ul id="sources-list"></ul>
+    <p class="sources-note">
+      東京都オープンデータカタログサイトのデータを利用しています。
+      <span class="sources-caveat">座れる場所は公園の面積からの推定です。段差の情報が無い場所は「不明」と表示しています。</span>
+    </p>
+  </footer>
+
+</main>
+
+<script src="/app.js" type="module"></script>
 </body>
 </html>

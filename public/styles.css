@@ -1,0 +1,394 @@
+/*
+ * Tokyo Outings / 画面のスタイル。T-50〜T-59。
+ *
+ * 色と字はデザイン (design/Tokyo Outings - Home.dc.html) から取っている。
+ * ビルドは無い。ここを直せばそのまま本番に載る。
+ *
+ * 読む人の前提:
+ *   - 体調が万全でない人が、片手で、外で見る
+ *   - だから文字は大きめ、当たり判定は広め、動きは控えめ
+ */
+
+:root {
+  --bg:        #e6dcc9;
+  --card:      #f5ead8;
+  --card-2:    #ebddc5;
+  --ink:       #201e1d;
+  --ink-60:    rgba(32, 30, 29, .62);
+  --ink-40:    rgba(32, 30, 29, .42);
+  --accent:    #c67139;
+  --accent-dk: #8c491a;
+  --leaf:      #56633f;
+  --leaf-lt:   #ccdbb2;
+  --line:      rgba(32, 30, 29, .12);
+
+  --sans: "Zen Kaku Gothic New", system-ui, -apple-system,
+          "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  --serif: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+
+  --radius: 20px;
+  --shadow: 0 10px 28px rgba(46, 43, 37, .14);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.65;
+  /* 端末の切り欠きを避ける。外で片手で見る想定 */
+  padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+}
+
+main {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- 読み込み中 ---------- */
+
+.boot {
+  min-height: 60dvh;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  justify-items: center;
+  color: var(--ink-60);
+  font-size: 14px;
+}
+.boot-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: .25; transform: scale(.85); } 50% { opacity: 1; transform: scale(1); } }
+
+/* ---------- 上端 ---------- */
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 4px 4px 28px;
+  font-size: 13.5px;
+  color: var(--ink-60);
+}
+.top p { margin: 0; }
+.top-weather { text-align: right; }
+
+/* ---------- 問い ---------- */
+
+.ask { margin: 0 0 8px; }
+
+.ask-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(30px, 8.5vw, 40px);
+  line-height: 1.25;
+  letter-spacing: -.01em;
+  margin: 0 0 12px;
+}
+
+.ask-sub {
+  margin: 0 0 24px;
+  color: var(--ink-60);
+  font-size: 14.5px;
+}
+
+.feels {
+  display: grid;
+  gap: 10px;
+}
+
+.feel {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  /* 当たり判定を広く。指が正確に動かない日に使う */
+  padding: 18px 20px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.feel:hover { background: var(--card-2); }
+.feel:active { transform: scale(.985); }
+.feel:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.feel-label { display: block; font-weight: 700; font-size: 18px; }
+.feel-hint  { display: block; color: var(--ink-60); font-size: 13.5px; margin-top: 2px; }
+
+/* 答えたあとの1行 */
+.answered {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 4px 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.answered-line { margin: 0; font-size: 15px; color: var(--ink-60); }
+.answered-line strong { color: var(--ink); font-size: 17px; }
+
+.link {
+  background: none; border: 0; padding: 4px 2px;
+  font: inherit; font-size: 14px;
+  color: var(--accent-dk);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- プラン ---------- */
+
+.plan { animation: rise .45s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* 差し替え中はうっすら落とす。真っ白にしない */
+.plan[aria-busy="true"] { opacity: .45; transition: opacity .2s ease; }
+
+.plan-headline {
+  margin: 0 4px 6px;
+  font-size: 15px;
+  color: var(--accent-dk);
+  font-weight: 500;
+}
+
+.plan-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(24px, 6.5vw, 30px);
+  line-height: 1.3;
+  margin: 0 4px 8px;
+}
+
+.plan-summary {
+  margin: 0 4px 16px;
+  color: var(--ink-60);
+  font-size: 14.5px;
+}
+
+.tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 20px;
+  padding: 0 4px;
+}
+.tags li {
+  background: var(--leaf-lt);
+  color: var(--leaf);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* ---------- 立ち寄り先 ---------- */
+
+.stops { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+
+.stop {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.stop-head {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: start;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.stop-head:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+
+.stop-order {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.stop-name { display: block; font-weight: 700; font-size: 17px; line-height: 1.35; }
+.stop-note { display: block; color: var(--ink-60); font-size: 13.5px; margin-top: 3px; }
+.stop-stay { color: var(--ink-40); font-size: 12.5px; white-space: nowrap; margin-top: 4px; }
+
+.stop-chevron { color: var(--ink-40); font-size: 12px; margin-top: 6px; }
+
+.stop-detail {
+  border-top: 1px solid var(--line);
+  padding: 14px 18px 16px;
+  background: var(--card-2);
+}
+.stop-detail dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 13.5px; }
+.stop-detail dt { color: var(--ink-60); }
+.stop-detail dd { margin: 0; }
+
+/* 三値の「不明」。× にしない — 不明は非対応ではない */
+.unknown { color: var(--ink-40); }
+.yes { color: var(--leaf); font-weight: 500; }
+.no  { color: var(--ink-60); }
+
+.inferred {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--ink-40);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 5px;
+  vertical-align: 1px;
+}
+
+.plan-footer {
+  margin: 0 4px 20px;
+  font-size: 13.5px;
+  color: var(--ink-60);
+}
+
+/* ---------- 操作 ---------- */
+
+.actions { display: flex; gap: 10px; margin: 0 0 20px; }
+
+.btn {
+  flex: 1;
+  padding: 15px 18px;
+  border-radius: 14px;
+  border: 0;
+  background: var(--ink);
+  color: var(--card);
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform .12s ease, opacity .12s ease;
+}
+.btn:active { transform: scale(.985); }
+.btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btn[disabled] { opacity: .5; cursor: default; }
+
+.btn-alt { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+.btn-small { flex: 0 0 auto; padding: 11px 16px; font-size: 14px; }
+
+/* ---------- 縮退の注記 ---------- */
+
+.notes {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(198, 113, 57, .1);
+  font-size: 13px;
+  color: var(--ink-60);
+}
+.notes p { margin: 0; }
+.notes p + p { margin-top: 5px; }
+
+/* ---------- 見つからない ---------- */
+
+.empty {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 20px;
+}
+.empty p { margin: 0 0 14px; }
+
+/* ---------- ことばで探す ---------- */
+
+.search {
+  margin: 8px 0 28px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.search summary {
+  font-size: 14px;
+  color: var(--ink-60);
+  cursor: pointer;
+  padding: 4px 2px;
+  list-style: none;
+}
+.search summary::-webkit-details-marker { display: none; }
+.search summary::before { content: "＋ "; color: var(--ink-40); }
+.search[open] summary::before { content: "− "; }
+.search summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.search-form { display: flex; gap: 8px; margin: 12px 0; }
+.search-form input {
+  flex: 1; min-width: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  font: inherit;
+  font-size: 15px;
+  color: inherit;
+}
+.search-form input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+.search-intent { margin: 0 0 10px; font-size: 12.5px; color: var(--ink-60); }
+
+.search-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.search-results li {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 14px;
+}
+.search-results .r-meta { display: block; color: var(--ink-60); font-size: 12.5px; margin-top: 2px; }
+
+/* ---------- 出典 ---------- */
+
+.sources {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  font-size: 13px;
+  color: var(--ink-60);
+}
+.sources-title { font-size: 14px; font-weight: 700; color: var(--ink); margin: 0 0 10px; }
+.sources ul { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.sources li { line-height: 1.5; }
+.sources a { color: var(--accent-dk); text-underline-offset: 3px; }
+.sources .s-meta { display: block; color: var(--ink-40); font-size: 12px; }
+.sources-note { margin: 0; font-size: 12px; color: var(--ink-40); }
+.sources-caveat { display: block; margin-top: 4px; }
+
+/* ---------- 動きを減らす設定を尊重する ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}

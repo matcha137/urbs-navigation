@@ -126,6 +126,15 @@ search.post('/', async (c) => {
   let rows;
   if (ranked) {
     ({ rows } = await queryPlaces(c.env.DB, { ...common, ids: [...ranked.keys()] }));
+
+    // topK は**区全体**から似ている順に 90件を取る。そこに距離や屋内の
+    // 絞り込みが重なると、近所に該当があるのに 0件になることがある
+    // (「雨でも濡れないところ」+ achy の450m で実際に起きた)。
+    // 類似度は諦めて、条件と近さで返す方がユーザにとって正しい
+    if (!rows.length) {
+      ({ rows } = await queryPlaces(c.env.DB, common));
+      ranked = null; // 類似度が無いので matchScore は付けない
+    }
   } else {
     // T-39 縮退: 語彙の層で読み取った条件は AI 無しでも効く。
     // 短い語 (「清澄」のような固有名詞) のときだけ部分一致も足す

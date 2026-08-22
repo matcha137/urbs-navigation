@@ -7,9 +7,10 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    // "none" にしておくと未マッチのパスは Worker に流れる。
-    // フロントを SPA ビルドに差し替える時点で "single-page-application" +
-    // run_worker_first: ["/api/*"] に変更する (T-57)。
+    // "none" のままにする (T-57 で確定)。
+    // フロントはビルド無しの1枚もので、クライアント側のルーティングを持たない。
+    // 未マッチのパスは Worker に流れ、/api/* がそこで処理される。
+    // "single-page-application" にすると /api/* の 404 まで index.html が返ってしまう。
     "not_found_handling": "none"
   },
   // T-34 天気キャッシュ。Open-Meteo の応答を 30分ぶん保持する。
