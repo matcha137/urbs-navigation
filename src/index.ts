@@ -25,7 +25,7 @@ app.get('/api/health', async (c) => {
 
   return c.json({
     ok: true,
-    service: 'tokyo-outings',
+    service: 'urbs-navigation',
     db,
     ts: new Date().toISOString(),
   });

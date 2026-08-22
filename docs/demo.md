@@ -3,7 +3,7 @@
 **このドキュメントに出てこない機能は作らない。**
 迷ったら「これはこの90秒に映るか？」で判断する。
 
-本番URL: https://tokyo-outings.chori39.workers.dev
+本番URL: https://urbs-navigation.chori39.workers.dev
 
 ---
 
