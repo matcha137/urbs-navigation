@@ -15,6 +15,7 @@ import { Hono } from 'hono';
 import { EMBED_BATCH, embedAll, embedText, findBoilerplate } from '../lib/embed';
 import { MODE_TONE, REASON_MODEL, SYSTEM_PROMPT } from '../../config/prompts';
 import { validate } from '../lib/reason';
+import { PARAM_LIMIT } from '../lib/places';
 import type { Bindings } from '../types';
 
 /** 1リクエストで処理する件数。Worker の実行時間に収まる範囲で切る。 */
@@ -22,6 +23,9 @@ const DEFAULT_LIMIT = 150;
 
 /** Vectorize への upsert 1回あたりの本数。 */
 const UPSERT_BATCH = 100;
+
+/** Vectorize の deleteByIds 1回あたりの上限。超えると code 40007。 */
+const DELETE_BATCH = 100;
 
 export const admin = new Hono<{ Bindings: Bindings }>();
 
@@ -219,6 +223,56 @@ admin.post('/validate-probe', async (c) => {
     planClaims: body.planClaims,
   });
   return c.json('ok' in r ? { accepted: true, text: r.ok } : { accepted: false, reason: r.reason });
+});
+
+/**
+ * POST /api/admin/forget — 指定した id の項目を Vectorize から消す。
+ *
+ * **D1 から消えた場所の残骸を掃除するためだけのもの。**
+ * 索引は id で upsert するので、id の付け方を変えると古い id の項目が
+ * 誰にも上書きされずに残る。検索は D1 と突き合わせて落とすので誤答にはならないが、
+ * topK の枠を死んだ id が食う。
+ *
+ * T-96 で場所 id を `park:AA…` から `park:koto:AA…` に変えた際、
+ * 江東区の409件が孤児になったのでこれを足した。
+ *
+ * 安全のため **D1 に実在する id は消さない**。消し過ぎると reindex が要る。
+ *   curl -XPOST .../api/admin/forget -H 'x-admin-token: …' -d '{"ids":["park:AA0131083001"]}'
+ */
+admin.post('/forget', async (c) => {
+  const expected = c.env.ADMIN_TOKEN;
+  if (!expected)
+    return c.json({ error: 'unavailable', message: 'ADMIN_TOKEN が未設定' }, 503);
+  if (c.req.header('x-admin-token') !== expected)
+    return c.json({ error: 'forbidden' }, 403);
+
+  const body = await c.req.json<{ ids?: unknown }>().catch(() => ({ ids: undefined }));
+  const ids = Array.isArray(body.ids) ? body.ids.filter((x): x is string => typeof x === 'string') : [];
+  if (!ids.length) return c.json({ error: 'bad_request', message: 'ids は文字列の配列' }, 400);
+  if (ids.length > 500) return c.json({ error: 'bad_request', message: 'ids は500件まで' }, 400);
+
+  // D1 に居るものは消さない。生きている場所を索引から落とさないための歯止め。
+  // **D1 のバインドは1文あたり100個まで** なので PARAM_LIMIT ごとに割って引く。
+  const alive = new Set<string>();
+  for (let i = 0; i < ids.length; i += PARAM_LIMIT) {
+    const chunk = ids.slice(i, i + PARAM_LIMIT);
+    const marks = chunk.map((_, n) => `?${n + 1}`).join(',');
+    const { results } = await c.env.DB
+      .prepare(`SELECT id FROM places WHERE id IN (${marks})`)
+      .bind(...chunk)
+      .all<{ id: string }>();
+    for (const r of results ?? []) alive.add(r.id);
+  }
+  const stale = ids.filter((id) => !alive.has(id));
+
+  if (!stale.length) return c.json({ deleted: 0, skippedAlive: alive.size });
+
+  // Vectorize の deleteByIds は 1回 100件まで (code 40007)
+  let mutation = null;
+  for (let i = 0; i < stale.length; i += DELETE_BATCH) {
+    mutation = await c.env.VECTORIZE.deleteByIds(stale.slice(i, i + DELETE_BATCH));
+  }
+  return c.json({ deleted: stale.length, skippedAlive: alive.size, mutation });
 });
 
 /** 索引の状態。件数が D1 と合っているかを見る。 */

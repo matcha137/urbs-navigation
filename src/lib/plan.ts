@@ -45,7 +45,7 @@ const STRIDE_M = 0.68;
 export function scoreCandidates(places: Place[], limits: Limits, origin: Origin): Scored[] {
   // novelty (新規性) は訪問履歴が無いと本来出せない。
   // 代わりに「候補集合の中でそのカテゴリがどれだけ珍しいか」で近似する。
-  // 江東区の母集団は park 278 / facility 120 / riverside 11 なので、
+  // 母集団は park 991 / facility 374 / shrine 34 / riverside 11 / garden 1 なので、
   // これで「いつもの公園」以外が good プロファイルで浮き上がる。
   const byCategory = new Map<string, number>();
   for (const p of places) byCategory.set(p.category, (byCategory.get(p.category) ?? 0) + 1);
@@ -127,8 +127,12 @@ const HEADLINE: Record<ModeId, string> = {
   indoor: 'なら、屋根のある場所だけで組みます。',
 };
 
-/** 「江東区立◯◯公園」→「◯◯公園」。見出しが区名で埋まるのを防ぐ。 */
-const shortName = (name: string) => name.replace(/^(東京都)?江東区立?/, '');
+/**
+ * 「江東区立◯◯公園」→「◯◯公園」。見出しが区名で埋まるのを防ぐ。
+ * 区名は決め打ちする。汎用の正規表現だと「三之輪橋区民広場」の先頭まで削れる。
+ */
+const shortName = (name: string) =>
+  name.replace(/^(東京都)?(江東|杉並|台東|目黒|新宿)区立?/, '');
 
 const distLabel = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`);
 

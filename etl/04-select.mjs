@@ -1,9 +1,10 @@
 /**
  * T-19: 投入対象を絞り込んで data/seed.json を作る。
  *
- * やることは2つ:
- *   1. bbox フィルタ — 江東区の範囲から外れた座標を落とす（座標入力ミスの検出）
- *   2. 件数の上限 — 既定では**かけない**。理由は下の THINNING を参照
+ * やることは3つ:
+ *   1. bbox フィルタ — 23区の範囲から外れた座標を落とす（座標入力ミスの検出）
+ *   2. 区の重心から離れすぎた点の警告 — bbox では拾えない桁ミスを見つける
+ *   3. 件数の上限 — 既定では**かけない**。理由は下の THINNING を参照
  *
  *   node etl/04-select.mjs            全件
  *   node etl/04-select.mjs --limit=200 デモ起点から近い順に200件
@@ -14,16 +15,24 @@ import { readFileSync, writeFileSync } from 'node:fs';
  * THINNING（間引き）について
  *
  * 当初の計画では「200件に間引く」としていたが、実データを見て**かけないことにした**。
- *   - 409件は D1 にとって全く負荷にならない規模
- *   - デモ起点(清澄白河)から 250m 以内の候補は 2件しかない。ここを削ると
- *     `low` プロファイルの候補が消える。間引きは薄い方を薄くする方向にしか働かない
- *   - 区全域を持っておくと「別の場所を見せて」と自然文検索の母集団が確保できる
+ *   - 1,411件は D1 にとって全く負荷にならない規模 (DBサイズ 2MB弱)
+ *   - 薄い駅ほど間引きの影響を受ける。間引きは薄い方を薄くする方向にしか働かない
+ *   - 5区の全域を持っておくと「別の場所を見せて」と自然文検索の母集団が確保できる
  *
  * --limit を付ければデモ起点からの近い順で絞れる。必要になったときだけ使う。
  */
 
-/** 江東区の外接矩形。少し余裕を持たせてある。 */
-const BBOX = { minLat: 35.58, maxLat: 35.72, minLng: 139.75, maxLng: 139.88 };
+/**
+ * 23区の外接矩形。少し余裕を持たせてある。
+ *
+ * **これは「範囲を決める」ものではなく「桁を間違えた座標を見つける」もの。**
+ * 江東区だけだった頃は区の矩形で切っていたが、5区に増えたので区単位では
+ * もう意味をなさない。代わりに区ごとの重心からの距離で外れ値を警告する。
+ */
+const BBOX = { minLat: 35.50, maxLat: 35.85, minLng: 139.55, maxLng: 139.95 };
+
+/** 区の重心からこれ以上離れていたら警告する。区の差し渡しはどこも10km未満。 */
+const WARD_OUTLIER_M = 8000;
 
 /** デモ起点（清澄白河駅）。--limit を使うときの距離基準。 */
 const DEMO_ORIGIN = { lat: 35.6816, lng: 139.7975, label: '清澄白河駅' };
@@ -53,7 +62,21 @@ if (outside.length) {
   outside.slice(0, 5).forEach((p) => console.log(`  範囲外: ${p.name} (${p.lat}, ${p.lng})`));
 }
 
-// --- 2. 件数上限 ---
+// --- 2. 区の重心から離れすぎた点 ---
+// bbox を通ってしまう程度の座標ミスをここで拾う。落とさずに warn だけ出す。
+const byWard = {};
+for (const p of places) (byWard[p.ward] ??= []).push(p);
+for (const [ward, list] of Object.entries(byWard)) {
+  const mid = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+  const centre = { lat: mid(list.map((p) => p.lat)), lng: mid(list.map((p) => p.lng)) };
+  const far = list.filter((p) => dist(centre, p) > WARD_OUTLIER_M);
+  if (far.length) {
+    console.log(`△ ${ward}: 重心から ${WARD_OUTLIER_M / 1000}km 以上離れた点が ${far.length} 件`);
+    far.slice(0, 5).forEach((p) => console.log(`    ${p.name} (${p.lat}, ${p.lng})`));
+  }
+}
+
+// --- 3. 件数上限 ---
 if (limit && places.length > limit) {
   places = places
     .map((p) => ({ p, d: dist(DEMO_ORIGIN, p) }))
@@ -68,11 +91,10 @@ if (limit && places.length > limit) {
 // --- デモ起点からの到達件数を出しておく。ここが薄いとプロファイルが機能しない ---
 const withDist = places.map((p) => ({ p, d: dist(DEMO_ORIGIN, p) }));
 const reach = (r) => withDist.filter((x) => x.d <= r).length;
-console.log(`\n${DEMO_ORIGIN.label} からの到達件数（体調プロファイルの距離上限に対応）:`);
-console.log(`  low   250m 以内: ${reach(250)} 件`);
-console.log(`  achy  450m 以内: ${reach(450)} 件`);
-console.log(`  tired 600m 以内: ${reach(600)} 件`);
-console.log(`  good 1200m 以内: ${reach(1200)} 件`);
+console.log(`\n${DEMO_ORIGIN.label} からの到達件数（config/modes.ts の MINUTES に対応）:`);
+console.log(`  30分  700m 以内: ${reach(700)} 件`);
+console.log(`  60分 1200m 以内: ${reach(1200)} 件`);
+console.log(`  90分 1700m 以内: ${reach(1700)} 件`);
 
 const withWc = places.filter((p) => p.access.accessibleToilet).length;
 const out = {

@@ -50,7 +50,7 @@ for (const p of places) {
 }
 
 // --- 名寄せ漏れの検出 ---
-const key = (n) => n.replace(/^(東京都)?江東区立?/, '').replace(/[\s　（）()・･,、。.]/g, '').toLowerCase();
+const key = (n) => n.replace(/^(東京都)?(江東|杉並|台東|目黒|新宿)区立?/, '').replace(/[\s　（）()・･,、。.]/g, '').toLowerCase();
 const R = 6371000, rad = (d) => d * Math.PI / 180;
 const dist = (a, b) => {
   const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);

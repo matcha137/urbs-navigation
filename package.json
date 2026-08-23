@@ -16,9 +16,10 @@
     "etl:catalog": "node etl/00-catalog.mjs",
     "etl:encode": "node etl/02-encode.mjs",
     "etl:normalize": "node etl/03-normalize.mjs",
-    "etl": "npm run etl:encode && npm run etl:normalize && npm run check:normalized && npm run etl:select && npm run etl:emit",
+    "etl": "npm run etl:encode && npm run etl:normalize && npm run check:normalized && npm run etl:station-modes && npm run etl:select && npm run etl:emit",
     "check:normalized": "node scripts/check-normalized.mjs",
     "etl:select": "node etl/04-select.mjs",
+    "etl:station-modes": "node etl/06-station-modes.mjs",
     "etl:emit": "node etl/05-emit-sql.mjs",
     "check:api": "node scripts/check-api.mjs",
     "reindex": "node scripts/reindex.mjs"

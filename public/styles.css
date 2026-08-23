@@ -216,9 +216,22 @@ main {
   cursor: pointer;
   transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
 }
-.mode:hover { border-color: var(--teal); }
-.mode:active { transform: scale(.98); }
+.mode:hover:not(:disabled) { border-color: var(--teal); }
+.mode:active:not(:disabled) { transform: scale(.98); }
 .mode:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+
+/*
+ * その駅では成立しないモード。
+ * 消さずに残して理由を出す。選択肢ごと消えると「そもそも無い機能」に見えて、
+ * 「この区にはデータが無い」という事実が伝わらない。
+ */
+.mode:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  background: var(--tile);
+  border-style: dashed;
+}
+.mode:disabled .mode-hint { color: var(--orange-dk); }
 
 .mode-icon {
   display: grid;

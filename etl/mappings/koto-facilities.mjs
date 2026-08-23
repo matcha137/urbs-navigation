@@ -9,6 +9,10 @@ import { num, str, triState, validCoord } from './_shared.mjs';
  *  3. バリアフリー列の充足率は6〜22%。**未記入を「非対応」と読まない** (triState が null を返す)。
  *
  * 632件のうち学校・防災倉庫・区営住宅など「行き先ではない」ものを EXCLUDE で落とす。
+ *
+ * **この区分の列は江東区が独自に足したもので、他区の公共施設一覧には無い。**
+ * だから他区は _templates.mjs の standardFacilities (名前で切る) を使う。
+ * 区分で切れるぶんこちらの方が精度が高いので、江東区はこのまま残す。
  */
 
 /** 大区分で丸ごと落とすもの。一般の人が外出先として選ばない施設。 */
@@ -71,7 +75,7 @@ export default {
 
     const desc = str(row['説明']);
     return {
-      id: `facility:${str(row['ID']) || `row${i}`}`,
+      id: `facility:koto:${str(row['ID']) || `row${i}`}`,
       name,
       nameKana: str(row['名称_カナ']),
       lat, lng,

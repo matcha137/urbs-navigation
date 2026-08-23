@@ -1,0 +1,361 @@
+{
+  "_comment": "etl/06-station-modes.mjs が生成する。手で書き換えないこと。半径1700m (90分の上限) 以内に 3 件以上あるモードだけを modes に載せている。counts はその実測値。行き先にしない施設 (config/destinations.ts) は除いてある。",
+  "generatedAt": "2026-08-23T05:30:37.296Z",
+  "radiusM": 1700,
+  "minCount": 3,
+  "stations": {
+    "kiyosumi": {
+      "ward": "江東区",
+      "name": "清澄白河駅",
+      "counts": {
+        "stroll": 91,
+        "water": 17,
+        "active": 91,
+        "indoor": 15
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active",
+        "indoor"
+      ]
+    },
+    "monzen": {
+      "ward": "江東区",
+      "name": "門前仲町駅",
+      "counts": {
+        "stroll": 92,
+        "water": 25,
+        "active": 92,
+        "indoor": 15
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active",
+        "indoor"
+      ]
+    },
+    "kiba": {
+      "ward": "江東区",
+      "name": "木場駅",
+      "counts": {
+        "stroll": 125,
+        "water": 38,
+        "active": 125,
+        "indoor": 20
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active",
+        "indoor"
+      ]
+    },
+    "toyocho": {
+      "ward": "江東区",
+      "name": "東陽町駅",
+      "counts": {
+        "stroll": 117,
+        "water": 26,
+        "active": 117,
+        "indoor": 18
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active",
+        "indoor"
+      ]
+    },
+    "kameido": {
+      "ward": "江東区",
+      "name": "亀戸駅",
+      "counts": {
+        "stroll": 93,
+        "water": 12,
+        "active": 93,
+        "indoor": 13
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active",
+        "indoor"
+      ]
+    },
+    "toyosu": {
+      "ward": "江東区",
+      "name": "豊洲駅",
+      "counts": {
+        "stroll": 56,
+        "water": 35,
+        "active": 56,
+        "indoor": 9
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active",
+        "indoor"
+      ]
+    },
+    "ogikubo": {
+      "ward": "杉並区",
+      "name": "荻窪駅",
+      "counts": {
+        "stroll": 105,
+        "water": 0,
+        "active": 105,
+        "indoor": 4
+      },
+      "modes": [
+        "stroll",
+        "active",
+        "indoor"
+      ]
+    },
+    "asagaya": {
+      "ward": "杉並区",
+      "name": "阿佐ケ谷駅",
+      "counts": {
+        "stroll": 106,
+        "water": 1,
+        "active": 106,
+        "indoor": 6
+      },
+      "modes": [
+        "stroll",
+        "active",
+        "indoor"
+      ]
+    },
+    "koenji": {
+      "ward": "杉並区",
+      "name": "高円寺駅",
+      "counts": {
+        "stroll": 80,
+        "water": 1,
+        "active": 80,
+        "indoor": 5
+      },
+      "modes": [
+        "stroll",
+        "active",
+        "indoor"
+      ]
+    },
+    "nishiogi": {
+      "ward": "杉並区",
+      "name": "西荻窪駅",
+      "counts": {
+        "stroll": 69,
+        "water": 0,
+        "active": 69,
+        "indoor": 1
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "hamadayama": {
+      "ward": "杉並区",
+      "name": "浜田山駅",
+      "counts": {
+        "stroll": 113,
+        "water": 5,
+        "active": 113,
+        "indoor": 1
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active"
+      ]
+    },
+    "eifukucho": {
+      "ward": "杉並区",
+      "name": "永福町駅",
+      "counts": {
+        "stroll": 85,
+        "water": 9,
+        "active": 85,
+        "indoor": 1
+      },
+      "modes": [
+        "stroll",
+        "water",
+        "active"
+      ]
+    },
+    "asakusa": {
+      "ward": "台東区",
+      "name": "浅草駅",
+      "counts": {
+        "stroll": 33,
+        "water": 1,
+        "active": 33,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "ueno": {
+      "ward": "台東区",
+      "name": "上野駅",
+      "counts": {
+        "stroll": 29,
+        "water": 0,
+        "active": 29,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "tawaramachi": {
+      "ward": "台東区",
+      "name": "田原町駅",
+      "counts": {
+        "stroll": 33,
+        "water": 1,
+        "active": 33,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "iriya": {
+      "ward": "台東区",
+      "name": "入谷駅",
+      "counts": {
+        "stroll": 37,
+        "water": 1,
+        "active": 37,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "nakameguro": {
+      "ward": "目黒区",
+      "name": "中目黒駅",
+      "counts": {
+        "stroll": 55,
+        "water": 1,
+        "active": 55,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "yutenji": {
+      "ward": "目黒区",
+      "name": "祐天寺駅",
+      "counts": {
+        "stroll": 62,
+        "water": 1,
+        "active": 62,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "gakugei": {
+      "ward": "目黒区",
+      "name": "学芸大学駅",
+      "counts": {
+        "stroll": 57,
+        "water": 0,
+        "active": 57,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "ikejiri": {
+      "ward": "目黒区",
+      "name": "池尻大橋駅",
+      "counts": {
+        "stroll": 36,
+        "water": 0,
+        "active": 36,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "shinjuku": {
+      "ward": "新宿区",
+      "name": "新宿駅",
+      "counts": {
+        "stroll": 48,
+        "water": 0,
+        "active": 48,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "takadanobaba": {
+      "ward": "新宿区",
+      "name": "高田馬場駅",
+      "counts": {
+        "stroll": 73,
+        "water": 2,
+        "active": 73,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "kagurazaka": {
+      "ward": "新宿区",
+      "name": "神楽坂駅",
+      "counts": {
+        "stroll": 27,
+        "water": 0,
+        "active": 27,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    },
+    "waseda": {
+      "ward": "新宿区",
+      "name": "早稲田駅",
+      "counts": {
+        "stroll": 54,
+        "water": 0,
+        "active": 54,
+        "indoor": 0
+      },
+      "modes": [
+        "stroll",
+        "active"
+      ]
+    }
+  }
+}

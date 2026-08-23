@@ -52,6 +52,7 @@ const el = {
 /** 画面の状態。ここ以外に状態を持たない。 */
 const state = {
   stations: [],
+  wards: [],
   station: null,
   minutes: DEFAULT_MINUTES,
   modes: [],
@@ -119,7 +120,7 @@ function getPosition() {
 
 /**
  * 現在地に一番近い駅。**駅そのものを起点にする**ので、位置情報が取れても
- * 座標は使わない。データが江東区にしか無いため、区外にいる人の現在地から
+ * 座標は使わない。データがある5区の外にいる人の現在地から
  * 探すと必ず0件になる (config/stations.ts の実測値を参照)。
  */
 function nearestStation(pos) {
@@ -191,16 +192,22 @@ function accessRows(place) {
 // =====================================================================
 
 function renderStations() {
-  el.station.replaceChildren(...state.stations.map((s) => {
-    const o = document.createElement('option');
-    o.value = s.id;
-    o.textContent = `${s.name}（${s.lines}）`;
-    return o;
+  // 区ごとに optgroup で束ねる。駅名だけ並べると24件が延々続いて選べない
+  el.station.replaceChildren(...state.wards.map((ward) => {
+    const g = document.createElement('optgroup');
+    g.label = ward;
+    g.append(...state.stations.filter((s) => s.ward === ward).map((s) => {
+      const o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = `${s.name}（${s.lines}）`;
+      return o;
+    }));
+    return g;
   }));
   el.station.value = state.station.id;
   el.stationHint.textContent =
-    `対応駅：${state.stations.map((s) => s.name.replace(/駅$/, '')).join('・')}` +
-    '　※データが江東区のため、区内の駅のみです';
+    `対応：${state.wards.map((w) => w.replace(/区$/, '')).join('・')}の${state.stations.length}駅` +
+    '　※オープンデータが揃っている区だけを載せています';
 }
 
 function renderMinutes() {
@@ -220,19 +227,51 @@ function renderMinutes() {
   }));
 }
 
+/**
+ * 選んだ駅で成立しないモードは押せなくする。
+ *
+ * 台東区・目黒区・新宿区には屋内施設のデータが無く、
+ * 「水辺を歩く」も名前からの推定なので当たらない駅がある。
+ * 押させてから「見つかりませんでした」と言うのは不誠実なので、
+ * **理由を書いて最初から選べなくする**。実測は config/station-modes.json。
+ */
+const UNAVAILABLE_REASON = {
+  ward:    { indoor: 'この区は屋内施設のデータがありません',
+             water:  'この区には水辺と分かる場所がありません' },
+  station: { indoor: 'この駅の近くに屋内の場所が見つかりません',
+             water:  'この駅の近くに水辺の場所が見つかりません' },
+};
+
+/**
+ * 使えない理由が「区にデータが無い」のか「この駅の近くに無い」のかを分ける。
+ * 杉並区には屋内施設のデータがあるが西荻窪駅の近くには足りない、という場合に
+ * 「この区はデータがありません」と書くと嘘になる。
+ * 区内のどの駅でも使えないなら区の問題、そうでなければ駅の問題。
+ */
+function unavailableReason(mode) {
+  const inWard = state.stations.filter((s) => s.ward === state.station?.ward);
+  const anywhere = inWard.some((s) => s.modes.includes(mode));
+  const table = anywhere ? UNAVAILABLE_REASON.station : UNAVAILABLE_REASON.ward;
+  return table[mode] ?? 'この駅では選べません';
+}
+
 function renderModes() {
+  const usable = state.station?.modes ?? [];
   el.modes.replaceChildren(...state.modes.map((m) => {
+    const ok = usable.includes(m.id);
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'mode';
     b.dataset.mode = m.id;
+    b.disabled = !ok;
+    if (!ok) b.setAttribute('aria-disabled', 'true');
     b.innerHTML =
       '<span class="mode-icon" aria-hidden="true"></span>' +
       '<span class="mode-label"></span><span class="mode-hint"></span>';
     b.querySelector('.mode-icon').textContent = m.emoji;
     b.querySelector('.mode-label').textContent = m.label;
-    b.querySelector('.mode-hint').textContent = m.hint;
-    b.addEventListener('click', () => choose(m));
+    b.querySelector('.mode-hint').textContent = ok ? m.hint : unavailableReason(m.id);
+    if (ok) b.addEventListener('click', () => choose(m));
     return b;
   }));
 }
@@ -516,6 +555,7 @@ async function boot() {
 
   state.modes = modes.modes;
   state.stations = stations.stations;
+  state.wards = stations.wards ?? [...new Set(stations.stations.map((s) => s.ward))];
   state.station = nearestStation(pos);
 
   renderStations();
@@ -524,6 +564,14 @@ async function boot() {
 
   el.station.addEventListener('change', () => {
     state.station = state.stations.find((s) => s.id === el.station.value) ?? state.stations[0];
+    // 区が変われば選べるモードも変わる。押せる/押せないを描き直す
+    renderModes();
+    // 今見ているモードが移った先の駅で成立しないなら、条件選びに戻す
+    if (state.mode && !state.station.modes.includes(state.mode.id)) {
+      state.mode = null;
+      backToAsk();
+      return;
+    }
     if (state.mode && !el.plan.hidden) choose(state.mode);
   });
   el.change.addEventListener('click', backToAsk);

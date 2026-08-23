@@ -189,10 +189,37 @@ for (const mode of ['active', 'stroll', 'indoor', 'water']) {
 
   const { body: st } = await get('/api/stations');
   ok(st?.stations?.length > 0, 'stations: 空');
-  // 江東区の外の駅を出すと、押した先で必ず0件になる
-  ok(st.stations.every((s) => s.lat > 35.62 && s.lat < 35.72 && s.lng > 139.77 && s.lng < 139.85),
-    'stations: 江東区の外の駅が混ざっている');
-  console.log(`選択肢        しかた${modes.modes.length}件 / 駅${st.stations.length}件`);
+  ok(Array.isArray(st.wards) && st.wards.length > 0, 'stations: wards が無い');
+  // データを持っていない区の駅を出すと、押した先で必ず0件になる
+  ok(st.stations.every((s) => st.wards.includes(s.ward)),
+    'stations: wards に無い区の駅が混ざっている');
+  ok(st.stations.every((s) => Array.isArray(s.modes) && s.modes.length > 0),
+    'stations: modes が空の駅がある');
+  // 屋内のデータが無い区で「屋内で休む」を出すと必ず0件になる
+  for (const ward of ['台東区', '目黒区', '新宿区']) {
+    ok(st.stations.filter((s) => s.ward === ward).every((s) => !s.modes.includes('indoor')),
+      `stations: ${ward} に indoor が付いている (屋内施設のデータが無い区)`);
+  }
+  console.log(
+    `選択肢        しかた${modes.modes.length}件 / 駅${st.stations.length}件 / 区${st.wards.length}件`
+  );
+
+  // ---------- T-96: 申告どおりに候補が出るか ----------
+  // config/station-modes.json は ETL 側が JS でハードフィルタを書き直して作っている。
+  // src/lib/places.ts の modeConditions() とズレると「選べるのに0件」が起きるので、
+  // **全駅×申告モードを実際に叩いて**空でないことを確かめる。
+  let checked = 0, empty = [];
+  for (const s of st.stations) {
+    for (const mode of s.modes) {
+      const { status, body } = await post('/api/suggest', {
+        mode, minutes: 90, lat: s.lat, lng: s.lng,
+      });
+      checked++;
+      if (status !== 200 || !body?.plan?.stops?.length) empty.push(`${s.name}/${mode}`);
+    }
+  }
+  ok(empty.length === 0, `駅×しかた: 申告しているのに0件 -> ${empty.join(', ')}`);
+  console.log(`駅×しかた    ${checked}通り すべて候補あり`);
 }
 
 // ---------- T-36〜T-39: /api/search ----------

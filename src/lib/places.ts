@@ -5,7 +5,10 @@
  */
 import type { Place, PlaceAccess, PlaceCategory, PlaceSource } from '../../shared/types';
 import { seatingTierFromArea, type ModeProfile } from '../../config/modes';
-import { NOT_A_DESTINATION, WATERSIDE_KEYWORDS, WATERSIDE_RIVER } from '../../config/destinations';
+import {
+  NOT_A_DESTINATION, NOT_A_DESTINATION_PREFIX, NOT_A_DESTINATION_PREFIX_KEEP,
+  WATERSIDE_KEYWORDS, NOT_WATERSIDE_WORDS, WATERSIDE_RIVER_TOKEN,
+} from '../../config/destinations';
 import { Params, distanceExpr } from './sql';
 
 /** v_places の1行。列名はスキーマそのまま。 */
@@ -122,13 +125,17 @@ export function modeConditions(p: ModeProfile): string[] {
  * 13語をバインドすると D1 の 100個上限を圧迫する。
  */
 export function watersideCondition(): string {
-  const likes = WATERSIDE_KEYWORDS
-    .map((kw) => `name LIKE '%${kw.replace(/'/g, "''")}%'`)
+  // 地名・人名を先に取り除いた名前に対して当てる。深川公園・堀ノ内東公園・
+  // 浜田山公園を水辺と呼ばないため。理由と一覧は config/destinations.ts。
+  const cleaned = NOT_WATERSIDE_WORDS.reduce(
+    (expr, w) => `replace(${expr}, '${w.replace(/'/g, "''")}', '')`,
+    'name'
+  );
+  const words = [...WATERSIDE_KEYWORDS, WATERSIDE_RIVER_TOKEN];
+  const likes = words
+    .map((kw) => `${cleaned} LIKE '%${kw.replace(/'/g, "''")}%'`)
     .join(' OR ');
-  // 「深川」を消してもまだ「川」が残る名前だけを川とみなす。理由は config 側の注記。
-  const { token, ignoreWord } = WATERSIDE_RIVER;
-  const river = `replace(name, '${ignoreWord}', '') LIKE '%${token}%'`;
-  return `(category = 'riverside' OR ${likes} OR ${river})`;
+  return `(category = 'riverside' OR ${likes})`;
 }
 
 /**
@@ -140,9 +147,16 @@ export function watersideCondition(): string {
  * 語は config の const 配列でユーザ入力ではないが、念のため引用符は潰す。
  */
 export function destinationConditions(): string {
-  return NOT_A_DESTINATION
-    .map((kw) => `name NOT LIKE '%${kw.replace(/'/g, "''")}%'`)
-    .join(' AND ');
+  const contains = NOT_A_DESTINATION
+    .map((kw) => `name NOT LIKE '%${kw.replace(/'/g, "''")}%'`);
+  // 「旧」は先頭のときだけ。部分一致だと地名の「旧」まで巻き込む。
+  // さらに「旧中川」で始まる名前は川の名前なので残す (config 側の注記)。
+  const keep = NOT_A_DESTINATION_PREFIX_KEEP
+    .map((kw) => `name LIKE '${kw.replace(/'/g, "''")}%'`)
+    .join(' OR ');
+  const prefixes = NOT_A_DESTINATION_PREFIX
+    .map((kw) => `(name NOT LIKE '${kw.replace(/'/g, "''")}%' OR ${keep})`);
+  return [...contains, ...prefixes].join(' AND ');
 }
 
 // =====================================================================

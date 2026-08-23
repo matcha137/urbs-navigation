@@ -3,5 +3,7 @@ node_modules/
 .dev.vars
 dist/
 data/utf8/
+# 不採用にした文京区の GIS ZIP (8MB)。probe は落とすがリポジトリには置かない
+data/raw/*.zip
 data/geocode-cache.json
 *.log

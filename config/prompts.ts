@@ -23,7 +23,7 @@ export const REASON_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
  * プロンプトを直しても事実表は変わらないので、版数を混ぜないと
  * 古い文が返り続けて「直したのに変わらない」になる。
  */
-export const PROMPT_VERSION = 7;
+export const PROMPT_VERSION = 8;
 
 /** ここを超えたら諦めてルールベースに戻す。デモで画面が固まる方が損失が大きい。 */
 export const REASON_TIMEOUT_MS = 6000;
@@ -81,7 +81,7 @@ export const BANNED_WORDS = [
  */
 export const STEP_FREE_CLAIM_RE = /段差|バリアフリー|フラット|平坦|車椅子で入れ|車椅子でも入れ/;
 
-export const SYSTEM_PROMPT = `あなたは東京都江東区の外出プランに短い日本語の説明を付ける係です。
+export const SYSTEM_PROMPT = `あなたは東京都の外出プランに短い日本語の説明を付ける係です。
 
 # 絶対の規則
 1. 与えられた「事実」に書かれていることだけを書く。
@@ -109,7 +109,7 @@ export const SYSTEM_PROMPT = `あなたは東京都江東区の外出プラン�
 
 - headline: ${LIMITS.headline}文字以内。「なら、」で始める。
 - title: ${LIMITS.title}文字以内。**立ち寄り先の名前を必ず1つ入れる**。
-  「江東区の散策」のような、どこにでも当てはまる見出しにしない。体言止めでよい。
+  「東京の散策」のような、どこにでも当てはまる見出しにしない。体言止めでよい。
 - notes: 立ち寄り先と同じ数。各${LIMITS.note}文字以内。その場所を選んだ理由を事実で書く。
   **その場所の事実だけ**を書く。天気はプラン全体の話なので notes には書かない。
 

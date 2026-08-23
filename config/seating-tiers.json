@@ -1,11 +1,13 @@
 {
-  "_comment": "ETL (etl/03-normalize.mjs) と API (config/modes.ts) の両方が読む唯一の正。片方だけ書き換えると seed と実行時のスコアがズレる。閾値は江東区173公園の実分布に合わせてある: min 114 / p25 986 / 中央値 1690 / p75 3150 / p90 12691 / max 152998",
+  "_comment": "ETL (etl/03-normalize.mjs) と API (config/modes.ts) の両方が読む唯一の正。片方だけ書き換えると seed と実行時のスコアがズレる。",
+  "_distribution": "5区866件の面積の実分布に合わせてある: min 51 / p25 390 / 中央値 798 / p75 1854 / p90 4672 / max 152998 (㎡)。江東区173件だけだった頃は中央値1690で閾値は10000/3000/1000。区が増えて小さな児童遊園が入ったぶん分布が下にずれたので取り直した。閾値ごとの件数は tier3=83 / tier2=128 / tier1=219 / tier0=436。",
+  "_honesty": "ベンチの実データはどのデータセットにも存在しない。これは面積からの推定であって観測値ではない。UI では必ず confidence='inferred' と面積の実値を添えて出すこと。",
   "toiletJoinRadiusM": 200,
   "dedupeRadiusM": 100,
   "tiers": [
-    { "minAreaM2": 10000, "tier": 3, "label": "座れる場所が多そう" },
-    { "minAreaM2": 3000,  "tier": 2, "label": "座れる場所がありそう" },
-    { "minAreaM2": 1000,  "tier": 1, "label": "小さな公園" },
-    { "minAreaM2": 0,     "tier": 0, "label": "広くはない場所" }
+    { "minAreaM2": 5000, "tier": 3, "label": "座れる場所が多そう" },
+    { "minAreaM2": 2000, "tier": 2, "label": "座れる場所がありそう" },
+    { "minAreaM2": 800,  "tier": 1, "label": "小さな公園" },
+    { "minAreaM2": 0,    "tier": 0, "label": "広くはない場所" }
   ]
 }

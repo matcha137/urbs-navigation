@@ -9,10 +9,20 @@ import { writeFileSync } from 'node:fs';
 
 const API = 'https://catalog.data.metro.tokyo.lg.jp/api/3/action/package_search';
 
-/** 対象組織。区は徒歩圏デモの舞台、都の局は広域データの供給元。 */
+/**
+ * 対象組織。区は徒歩圏デモの舞台、都の局は広域データの供給元。
+ *
+ * 区を足すときの判断基準は「公園CSVに緯度経度が入っているか」の一点。
+ * 都の推奨フォーマットなので列は23区すべてに在るが、値を入れている区は少ない。
+ * 実測は docs/datasets.md の「23区を全部当たった結果」を参照。
+ */
 const ORGS = [
   { name: 't131059', label: '文京区' },
   { name: 't131083', label: '江東区' },
+  { name: 't131156', label: '杉並区' },
+  { name: 't131067', label: '台東区' },
+  { name: 't131105', label: '目黒区' },
+  { name: 't131041', label: '新宿区' },
   { name: 't000014', label: '東京都建設局' },   // 都立公園・河川
   { name: 't000008', label: '東京都都市整備局' }, // まちづくり・バリアフリー
   { name: 't000009', label: '東京都環境局' },   // 緑地

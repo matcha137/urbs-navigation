@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { MODE_LIST } from '../config/modes';
-import { STATIONS } from '../config/stations';
+import { STATIONS, WARDS } from '../config/stations';
 import { places } from './routes/places';
 import { suggest } from './routes/suggest';
 import { weather } from './routes/weather';
@@ -45,9 +45,13 @@ app.get('/api/modes', (c) =>
 
 /**
  * 出発地点として選べる駅。
- * **江東区の駅だけ。** 理由は config/stations.ts に実測値付きで書いてある。
+ *
+ * **データを持っている5区の駅だけ。** 理由は config/stations.ts に実測値付きで書いてある。
+ * 各駅の `modes` は「その駅で成立する散歩のしかた」の実測値で、
+ * フロントはここに無いモードを選べないようにする (0件の画面を出さないため)。
+ * `wards` は optgroup の並び順。
  */
-app.get('/api/stations', (c) => c.json({ stations: STATIONS }));
+app.get('/api/stations', (c) => c.json({ wards: WARDS, stations: STATIONS }));
 
 app.route('/api/places', places);
 app.route('/api/suggest', suggest);

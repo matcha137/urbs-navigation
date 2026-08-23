@@ -16,16 +16,26 @@ export type Minutes = 30 | 60 | 90;
 // ---------- 出発地点 ----------
 
 /**
- * 選べる駅。**データが江東区にしか無いので江東区の駅だけ**を出す。
- * 東京駅・新宿駅などを出すと、押しても候補が0件になる (docs/datasets.md)。
+ * 選べる駅。**データを持っている5区の駅だけ**を出す。
+ * 渋谷駅・池袋駅などを出すと、押しても候補が0件になる (docs/datasets.md)。
  */
 export interface Station {
   id: string;
+  /** 「江東区」など。UI はこれで駅をグループ分けする。 */
+  ward: string;
   name: string;
   lat: number;
   lng: number;
   /** 「半蔵門線・大江戸線」など。選ぶときの手がかり。 */
   lines: string;
+  /**
+   * **この駅で成立する散歩のしかた**。config/station-modes.json の実測値。
+   *
+   * 台東区・目黒区・新宿区には屋内施設のデータが無いので 'indoor' が入らない。
+   * 「水辺を歩く」も名前からの推定なので、当たる場所が3件未満の駅では外れる。
+   * ここに無いモードは UI で選べないようにすること。0件の画面を見せないため。
+   */
+  modes: ModeId[];
 }
 
 // ---------- 場所 ----------
@@ -195,6 +205,8 @@ export interface SuggestResponse {
 }
 
 export interface StationsResponse {
+  /** 区の並び。ドロップダウンの optgroup をこの順に出す。 */
+  wards: string[];
   stations: Station[];
 }
 
