@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-23T05:30:35.782Z",
+  "generatedAt": "2026-08-23T06:01:24.930Z",
   "config": {
     "toiletJoinRadiusM": 200,
     "dedupeRadiusM": 100
@@ -8,9 +8,8 @@
     "total": 1411,
     "byCategory": {
       "park": 991,
-      "facility": 374,
+      "facility": 408,
       "riverside": 11,
-      "shrine": 34,
       "garden": 1
     },
     "accessibleToilet": 525,
@@ -34008,7 +34007,7 @@
       "lat": 35.696636,
       "lng": 139.654297,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区梅里1-22-32",
       "areaM2": null,
       "access": {
@@ -34295,7 +34294,7 @@
       "lat": 35.700626,
       "lng": 139.649323,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-24-18",
       "areaM2": null,
       "access": {
@@ -34913,7 +34912,7 @@
       "lat": 35.696636,
       "lng": 139.654297,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区梅里1-22-32",
       "areaM2": null,
       "access": {
@@ -35244,7 +35243,7 @@
       "lat": 35.707558,
       "lng": 139.64827,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺北3-25-9",
       "areaM2": null,
       "access": {
@@ -35420,7 +35419,7 @@
       "lat": 35.699509,
       "lng": 139.652466,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-32-5",
       "areaM2": null,
       "access": {
@@ -35936,7 +35935,7 @@
       "lat": 35.699745,
       "lng": 139.654495,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-36-31",
       "areaM2": null,
       "access": {
@@ -35980,7 +35979,7 @@
       "lat": 35.718761,
       "lng": 139.617676,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区清水3-20-12",
       "areaM2": null,
       "access": {
@@ -36744,7 +36743,7 @@
       "lat": 35.706947,
       "lng": 139.648499,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺北3-20-8",
       "areaM2": null,
       "access": {
@@ -37045,7 +37044,7 @@
       "lat": 35.70509,
       "lng": 139.651306,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南4-44-11",
       "areaM2": null,
       "access": {
@@ -37133,7 +37132,7 @@
       "lat": 35.698578,
       "lng": 139.658249,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南1-7-22",
       "areaM2": null,
       "access": {
@@ -37471,7 +37470,7 @@
       "lat": 35.71347,
       "lng": 139.588577,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区善福寺2-26-18",
       "areaM2": null,
       "access": {
@@ -37846,7 +37845,7 @@
       "lat": 35.706947,
       "lng": 139.648499,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺北3-20-8",
       "areaM2": null,
       "access": {
@@ -38677,7 +38676,7 @@
       "lat": 35.700626,
       "lng": 139.649323,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-24-18",
       "areaM2": null,
       "access": {
@@ -38978,7 +38977,7 @@
       "lat": 35.700626,
       "lng": 139.649323,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-24-18",
       "areaM2": null,
       "access": {
@@ -39353,7 +39352,7 @@
       "lat": 35.701416,
       "lng": 139.645584,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南3-24-15",
       "areaM2": null,
       "access": {
@@ -39705,7 +39704,7 @@
       "lat": 35.698578,
       "lng": 139.658249,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南1-7-22",
       "areaM2": null,
       "access": {
@@ -40087,7 +40086,7 @@
       "lat": 35.701416,
       "lng": 139.645584,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南3-24-15",
       "areaM2": null,
       "access": {
@@ -40263,7 +40262,7 @@
       "lat": 35.717777,
       "lng": 139.592606,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区善福寺3-13-10",
       "areaM2": null,
       "access": {
@@ -40351,7 +40350,7 @@
       "lat": 35.701965,
       "lng": 139.651779,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-52-2",
       "areaM2": null,
       "access": {
@@ -40784,7 +40783,7 @@
       "lat": 35.701763,
       "lng": 139.645218,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南3-31-3",
       "areaM2": null,
       "access": {
@@ -40946,7 +40945,7 @@
       "lat": 35.701763,
       "lng": 139.645218,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南3-31-3",
       "areaM2": null,
       "access": {
@@ -41821,7 +41820,7 @@
       "lat": 35.715683,
       "lng": 139.586273,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区善福寺3-33-9",
       "areaM2": null,
       "access": {
@@ -42423,7 +42422,7 @@
       "lat": 35.702591,
       "lng": 139.648407,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-48-11",
       "areaM2": null,
       "access": {
@@ -43837,7 +43836,7 @@
       "lat": 35.700459,
       "lng": 139.654312,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南2-36-25",
       "areaM2": null,
       "access": {
@@ -44270,7 +44269,7 @@
       "lat": 35.705391,
       "lng": 139.649734,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺北2-5-1",
       "areaM2": null,
       "access": {
@@ -44726,7 +44725,7 @@
       "lat": 35.705658,
       "lng": 139.65625,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺北1-5-2",
       "areaM2": null,
       "access": {
@@ -44814,7 +44813,7 @@
       "lat": 35.691875,
       "lng": 139.651596,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区堀ノ内3-48-12",
       "areaM2": null,
       "access": {
@@ -44902,7 +44901,7 @@
       "lat": 35.705391,
       "lng": 139.649734,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺北2-5-1",
       "areaM2": null,
       "access": {
@@ -45166,7 +45165,7 @@
       "lat": 35.699703,
       "lng": 139.654922,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南1-13-8",
       "areaM2": null,
       "access": {
@@ -45254,7 +45253,7 @@
       "lat": 35.669189,
       "lng": 139.641251,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区下高井戸2-21-29",
       "areaM2": null,
       "access": {
@@ -45342,7 +45341,7 @@
       "lat": 35.707367,
       "lng": 139.649139,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺北3-20-15",
       "areaM2": null,
       "access": {
@@ -45386,7 +45385,7 @@
       "lat": 35.717888,
       "lng": 139.618271,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区清水3-21-21",
       "areaM2": null,
       "access": {
@@ -45430,7 +45429,7 @@
       "lat": 35.70401,
       "lng": 139.651474,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区高円寺南4-31-7",
       "areaM2": null,
       "access": {
@@ -45995,7 +45994,7 @@
       "lat": 35.713032,
       "lng": 139.597488,
       "ward": "杉並区",
-      "category": "shrine",
+      "category": "facility",
       "address": "東京都杉並区善福寺1-18-9",
       "areaM2": null,
       "access": {

@@ -325,7 +325,12 @@ T-16 の名寄せで、名称と座標（半径50m程度）による重複排除
 | 指標 | 値 |
 |---|---|
 | 総数 | 1,411 |
-| category | park 991 / facility 374 / shrine 34 / riverside 11 / garden 1 |
+| category | park 991 / facility 408 / riverside 11 / garden 1 |
+
+> shrine (寺社) は0件。一度34件が付いていたが、中身は「高円寺図書館」「善福寺北児童館」
+> のような**杉並区の地名**で、寺社は都市公園一覧にも公共施設一覧にも入っていなかった。
+> 名前から寺社を当てる規則ごと外した (`etl/mappings/_templates.mjs`)。
+
 | 車椅子対応トイレあり | 525 (37%) |
 | バリアフリーが宣言値 (`confidence='declared'`) | 88 |
 | 屋内 (`shelter=1`) | 408 |

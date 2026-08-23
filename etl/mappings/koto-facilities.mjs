@@ -24,12 +24,17 @@ const EXCLUDE_KEYWORDS = [
   '住宅', '駐車場', '駐輪', '倉庫', 'water', '給水',
 ];
 
-/** 小区分 → category。上から順に最初に当たったもの。 */
+/**
+ * 小区分 → category。上から順に最初に当たったもの。
+ *
+ * 名前にも当てる (小区分が空の行があるため) ので、shrine を「寺」で拾わない。
+ * 江東区の小区分に寺社の区分は無く、他区で地名を誤爆した実績がある。
+ * 理由は etl/mappings/_templates.mjs の NAME_CATEGORY_RULES に書いた。
+ */
 const CATEGORY_RULES = [
   [/公園|遊園|広場|緑地/, 'park'],
   [/庭園/, 'garden'],
   [/乗船場|水辺|河川|船着/, 'riverside'],
-  [/神社|寺|社寺/, 'shrine'],
   [/図書館|資料館|美術|博物|文化|ホール|センター/, 'facility'],
 ];
 

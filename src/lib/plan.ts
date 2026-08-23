@@ -45,8 +45,12 @@ const STRIDE_M = 0.68;
 export function scoreCandidates(places: Place[], limits: Limits, origin: Origin): Scored[] {
   // novelty (新規性) は訪問履歴が無いと本来出せない。
   // 代わりに「候補集合の中でそのカテゴリがどれだけ珍しいか」で近似する。
-  // 母集団は park 991 / facility 374 / shrine 34 / riverside 11 / garden 1 なので、
+  // 母集団は park 991 / facility 408 / riverside 11 / garden 1 なので、
   // これで「いつもの公園」以外が good プロファイルで浮き上がる。
+  //
+  // 珍しいカテゴリほど加点されるぶん、**誤分類がそのまま下駄になる**。
+  // 以前は地名の「高円寺」を寺と読んで34件が shrine になっており、
+  // 高円寺図書館が「珍しい」として浮いていた (etl/mappings/_templates.mjs で修正済み)。
   const byCategory = new Map<string, number>();
   for (const p of places) byCategory.set(p.category, (byCategory.get(p.category) ?? 0) + 1);
 

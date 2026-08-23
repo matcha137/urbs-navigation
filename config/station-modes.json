@@ -1,6 +1,6 @@
 {
   "_comment": "etl/06-station-modes.mjs が生成する。手で書き換えないこと。半径1700m (90分の上限) 以内に 3 件以上あるモードだけを modes に載せている。counts はその実測値。行き先にしない施設 (config/destinations.ts) は除いてある。",
-  "generatedAt": "2026-08-23T05:30:37.296Z",
+  "generatedAt": "2026-08-23T06:01:26.435Z",
   "radiusM": 1700,
   "minCount": 3,
   "stations": {
