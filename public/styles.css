@@ -32,6 +32,16 @@
 
 * { box-sizing: border-box; }
 
+/*
+ * hidden 属性を必ず効かせる。
+ *
+ * ブラウザ既定の [hidden] { display: none } は詳細度 0,1,0 しかないので、
+ * .boot { display: grid } のようなクラス側の display に負ける。
+ * 画面を出し入れするのに el.x.hidden = true を使っているので、
+ * ここで押さえておかないと「消したはずのものが残る」。
+ */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
