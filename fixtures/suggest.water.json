@@ -1,29 +1,28 @@
 {
   "plan": {
-    "id": "plan-low-1",
-    "title": "清澄二丁目公園まで",
-    "summary": "300 m · 好きなだけ · 通りの先",
-    "headline": "なら、通りの先まででいい。",
+    "id": "plan-water-1",
+    "title": "福富川公園から、堀ぞいに",
+    "summary": "900 m · 30分ほど · 堀を埋めた道をたどる",
+    "headline": "なら、堀ぞいの道をつなぎます。",
     "stops": [
       {
         "order": 1,
         "placeId": "park:AA0131083001",
         "name": "江東区立清澄二丁目公園",
-        "note": "833㎡の小さな公園。トイレは139m先",
-        "stayLabel": "10分",
+        "note": "833㎡。トイレは139m先",
+        "stayLabel": "15分",
         "lat": 35.682615,
         "lng": 139.796194
       }
     ],
     "tags": [
-      "300 m",
-      "2分で帰れる",
-      "だれでもトイレ 139m"
+      "900 m",
+      "車椅子対応トイレ 139m"
     ],
-    "footer": "≈400歩 · それでも外に出たことになる · 明日はもっと長くていい",
-    "totalDistanceM": 300,
-    "estimatedSteps": 400,
-    "estimatedMinutes": 15,
+    "footer": "≈1,400歩 · 川・堀の名前がつく場所から選びました",
+    "totalDistanceM": 900,
+    "estimatedSteps": 1400,
+    "estimatedMinutes": 30,
     "sources": [
       {
         "datasetName": "江東区 都市公園・都立公園一覧",

@@ -5,13 +5,13 @@
  *
  *   /api/places?limit=5
  *   /api/places?near=35.6816,139.7975&maxDistanceM=450
- *   /api/places?near=35.6816,139.7975&feel=achy      ← T-32 のハードフィルタ
+ *   /api/places?near=35.6816,139.7975&mode=stroll      ← T-32 のハードフィルタ
  *   /api/places?category=facility&destinationsOnly=true  ← 利用者限定の施設を除く
  */
 import { Hono } from 'hono';
 import type { PlaceCategory, PlacesResponse } from '../../shared/types';
-import { FEELS } from '../../config/feels';
-import { FEEL_IDS } from '../../shared/types';
+import { MODES } from '../../config/modes';
+import { MODE_IDS } from '../../shared/types';
 import { hydrate, queryPlaces, type PlaceRow } from '../lib/places';
 import type { Bindings } from '../types';
 
@@ -42,8 +42,8 @@ places.get('/', async (c) => {
   if (q.category && !CATEGORIES.includes(q.category as PlaceCategory))
     return c.json({ error: 'bad_request', message: `category は ${CATEGORIES.join(' | ')} のいずれか` }, 400);
 
-  if (q.feel && !FEEL_IDS.includes(q.feel as never))
-    return c.json({ error: 'bad_request', message: `feel は ${FEEL_IDS.join(' | ')} のいずれか` }, 400);
+  if (q.mode && !MODE_IDS.includes(q.mode as never))
+    return c.json({ error: 'bad_request', message: `mode は ${MODE_IDS.join(' | ')} のいずれか` }, 400);
 
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(q.limit) || 50));
   const maxDistanceM = Number(q.maxDistanceM) || undefined;
@@ -57,7 +57,7 @@ places.get('/', async (c) => {
     near: near ?? undefined,
     maxDistanceM,
     limit,
-    feel: q.feel ? FEELS[q.feel as keyof typeof FEELS] : undefined,
+    mode: q.mode ? MODES[q.mode as keyof typeof MODES] : undefined,
     // 既定は全件。行き先として見たいときだけ絞る (/api/suggest は常に絞っている)
     destinationsOnly: q.destinationsOnly === 'true',
   });

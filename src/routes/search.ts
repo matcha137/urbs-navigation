@@ -1,7 +1,7 @@
 /**
  * POST /api/search — 自然文で場所を探す。T-38 / T-39。
  *
- *   { "q": "雨でも濡れない静かなところ", "lat": 35.6816, "lng": 139.7975, "feel": "achy" }
+ *   { "q": "雨でも濡れない静かなところ", "lat": 35.6816, "lng": 139.7975, "mode": "stroll" }
  *
  * 流れ:
  *   1. 問い合わせ文から**データで判定できる条件**を読み取る  (src/lib/intent.ts)
@@ -27,8 +27,8 @@
  */
 import { Hono } from 'hono';
 import type { Place, SearchRequest, SearchResponse } from '../../shared/types';
-import { FEEL_IDS } from '../../shared/types';
-import { FEELS } from '../../config/feels';
+import { MODE_IDS } from '../../shared/types';
+import { MODES, effectiveLimits } from '../../config/modes';
 import { embedQuery } from '../lib/embed';
 import { readIntent, intentScore, type QueryIntent } from '../lib/intent';
 import { hydrate, queryPlaces, PARAM_LIMIT } from '../lib/places';
@@ -83,17 +83,21 @@ search.post('/', async (c) => {
   if (q.length > MAX_QUERY_LEN)
     return c.json({ error: 'bad_request', message: `q は ${MAX_QUERY_LEN} 文字まで` }, 400);
 
-  if (body.feel && !FEEL_IDS.includes(body.feel))
-    return c.json({ error: 'bad_request', message: `feel は ${FEEL_IDS.join(' | ')} のいずれか` }, 400);
+  if (body.mode && !MODE_IDS.includes(body.mode))
+    return c.json({ error: 'bad_request', message: `mode は ${MODE_IDS.join(' | ')} のいずれか` }, 400);
 
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(body.limit) || DEFAULT_LIMIT));
-  const profile = body.feel ? FEELS[body.feel] : undefined;
+  const profile = body.mode ? MODES[body.mode] : undefined;
 
   const lat = Number(body.lat), lng = Number(body.lng);
   const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
 
-  // 体調が指定されていれば距離も効かせる。検索でも「行ける範囲」は守る
-  const maxDistanceM = near && profile ? profile.maxDistanceM : undefined;
+  // モードが指定されていれば距離も効かせる。検索でも「行ける範囲」は守る。
+  // 検索は散歩時間を受け取らないので 60分・晴れ を基準にする。
+  const maxDistanceM =
+    near && body.mode
+      ? effectiveLimits(body.mode, 60, { condition: 'clear', tempC: 20 }).maxDistanceM
+      : undefined;
 
   // --- 1. 語彙の層 ---
   const intent = readIntent(q);
@@ -115,7 +119,7 @@ search.post('/', async (c) => {
   const common = {
     near,
     maxDistanceM,
-    feel: profile,
+    mode: profile,
     destinationsOnly: true,
     shelter: intent.requireShelter,
     accessibleToilet: intent.requireAccessibleToilet,
@@ -187,7 +191,7 @@ search.get('/', async (c) => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         q,
-        feel: c.req.query('feel'),
+        mode: c.req.query('mode'),
         limit: Number(c.req.query('limit')) || undefined,
         ...(near && near.length === 2 ? { lat: near[0], lng: near[1] } : {}),
       }),

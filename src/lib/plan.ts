@@ -5,11 +5,11 @@
  * Workers AI に置き換える。置き換えても構造は変えないこと。
  * (degraded.ai=true の間はここが返す文章がそのまま出る)
  *
- * スコアリングの重みは config/feels.ts の FEELS[].weights が唯一の正。
+ * スコアリングの重みは config/modes.ts の MODES[].weights が唯一の正。
  * ここに数値を増やさない。
  */
-import type { FeelId, Place, Plan, PlanStop, PlaceSource, WeatherSnapshot } from '../../shared/types';
-import { effectiveLimits } from '../../config/feels';
+import type { ModeId, Place, Plan, PlanStop, PlaceSource, WeatherSnapshot } from '../../shared/types';
+import { effectiveLimits, type MinutesOption } from '../../config/modes';
 import { ODD_AS_DESTINATION, ODD_PENALTY, REPEAT_CATEGORY_PENALTY } from '../../config/destinations';
 import { haversineM } from './sql';
 
@@ -120,11 +120,11 @@ function pickStops(scored: Scored[], limits: Limits, origin: Origin, seedIndex: 
 // 文章 (T-70 で LLM に置き換える範囲)
 // =====================================================================
 
-const HEADLINE: Record<FeelId, string> = {
-  good: 'なら、少し遠くまで足を伸ばしましょう。',
-  tired: 'なら、短くて平らな道にしましょう。',
-  achy: 'なら、トイレの近さで選びます。',
-  low: 'なら、外の空気だけでも。',
+const HEADLINE: Record<ModeId, string> = {
+  stroll: 'なら、短くて平らな道にしましょう。',
+  water: 'なら、堀ぞいの道をつなぎます。',
+  active: 'なら、少し遠くまで足を伸ばしましょう。',
+  indoor: 'なら、屋根のある場所だけで組みます。',
 };
 
 /** 「江東区立◯◯公園」→「◯◯公園」。見出しが区名で埋まるのを防ぐ。 */
@@ -203,7 +203,7 @@ function stayLabel(s: Scored, index: number, total: number, minutesEach: number)
 // =====================================================================
 
 function buildPlan(
-  feel: FeelId,
+  mode: ModeId,
   scored: Scored[],
   limits: Limits,
   origin: Origin,
@@ -219,8 +219,8 @@ function buildPlan(
     totalM += haversineM(chosen[i - 1].place, chosen[i].place);
   }
 
-  // 歩数は実距離から。所要時間は「表示する目安」として FEELS の値を使い、
-  // 歩行時間の分だけ足す (config/feels.ts の targetMinutes が滞在込みの想定)。
+  // 歩数は実距離から。所要時間は「表示する目安」として MODES の値を使い、
+  // 歩行時間の分だけ足す (config/modes.ts の targetMinutes が滞在込みの想定)。
   const estimatedSteps = Math.round(totalM / STRIDE_M / 10) * 10;
   const walkMin = Math.round(totalM / WALK_M_PER_MIN);
   const estimatedMinutes = Math.max(limits.targetMinutes, walkMin + 10);
@@ -252,13 +252,15 @@ function buildPlan(
   if (wc.length) footerBits.push(`車椅子対応トイレが${Math.min(...wc)}m以内`);
   else if (chosen.some((s) => s.place.access.hasToilet)) footerBits.push('トイレが近い');
   if (chosen.some((s) => s.place.access.shelter)) footerBits.push('屋内に休める場所');
+  // 水辺は名前からの判定。断定せず、どうやって選んだかを書く
+  if (limits.requireWaterside) footerBits.push('川・堀の名前がつく場所から選びました');
   if (limits.weatherNote) footerBits.push(limits.weatherNote);
 
   return {
-    id: `plan-${feel}-${planIndex}`,
+    id: `plan-${mode}-${planIndex}`,
     title: titleFor(chosen),
     summary: summaryFor(chosen, totalM, estimatedMinutes),
-    headline: HEADLINE[feel],
+    headline: HEADLINE[mode],
     stops,
     tags: tagsFor(chosen, totalM),
     footer: footerBits.join(' · '),
@@ -279,22 +281,23 @@ export interface BuildResult {
  * 代替は上位から順に別の場所を起点にして組む。1件目と全く同じ構成になるものは捨てる。
  */
 export function buildPlans(
-  feel: FeelId,
+  mode: ModeId,
+  minutes: MinutesOption,
   places: Place[],
   weather: WeatherSnapshot,
   origin: Origin
 ): BuildResult {
-  const limits = effectiveLimits(feel, weather);
+  const limits = effectiveLimits(mode, minutes, weather);
   const scored = scoreCandidates(places, limits, origin);
 
-  const plan = buildPlan(feel, scored, limits, origin, 0, 1);
+  const plan = buildPlan(mode, scored, limits, origin, 0, 1);
   if (!plan) return { plan: null, alternatives: [] };
 
   const alternatives: Plan[] = [];
   const used = new Set(plan.stops.map((s) => s.placeId));
   for (let seed = 1; seed < scored.length && alternatives.length < 2; seed++) {
     if (used.has(scored[seed].place.id)) continue;
-    const alt = buildPlan(feel, scored, limits, origin, seed, alternatives.length + 2);
+    const alt = buildPlan(mode, scored, limits, origin, seed, alternatives.length + 2);
     if (!alt) continue;
     alternatives.push(alt);
     alt.stops.forEach((s) => used.add(s.placeId));

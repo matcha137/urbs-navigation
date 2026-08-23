@@ -18,7 +18,7 @@ const dist=(a,b)=>{const dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng);
   const x=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;
   return 2*R*Math.asin(Math.sqrt(x));};
 
-// config/feels.ts と同じ値 (TS を直接読めないので検証用に写している)
+// config/modes.ts と同じ値 (TS を直接読めないので検証用に写している)
 const TIERS = [[10000,3],[3000,2],[1000,1],[0,0]];
 const tierOf = a => (a>0 ? TIERS.find(([m])=>a>=m)[1] : 0);
 const JOIN_R = 200;
@@ -77,7 +77,7 @@ const places = [...parkPlaces, ...facilityPlaces];
 const ORIGIN = { lat: 35.6816, lng: 139.7975, label: '清澄白河駅' };
 
 console.log(`公園 ${places.length}件 / 起点 ${ORIGIN.label}\n`);
-console.log('feel   | 距離内 | +段差除外 | +だれでもトイレ | 推定ティア充足 | 最終候補');
+console.log('mode   | 距離内 | +段差除外 | +だれでもトイレ | 推定ティア充足 | 最終候補');
 console.log('-------|--------|-----------|----------------|---------------|--------');
 
 for (const [id, f] of Object.entries(FEELS)) {

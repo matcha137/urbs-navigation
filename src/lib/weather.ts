@@ -2,7 +2,7 @@
  * 天気の取得。T-34。
  *
  * Open-Meteo (APIキー不要・商用でなければ無料) を叩き、KV に 30分キャッシュする。
- * 補正の計算そのものは config/feels.ts の WEATHER_ADJUST / tempScale が持っている (T-35)。
+ * 補正の計算そのものは config/modes.ts の WEATHER_ADJUST / tempScale が持っている (T-35)。
  * ここは「いま何度で、雨か」を返すことだけに責任を持つ。
  *
  * ---

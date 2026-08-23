@@ -9,7 +9,7 @@
  *   /api/weather?near=35.6816,139.7975&demo=true   ← 固定の雨
  */
 import { Hono } from 'hono';
-import { FEEL_LIST, FEELS, effectiveLimits } from '../../config/feels';
+import { MODE_LIST, MODES, effectiveLimits, MINUTES_OPTIONS } from '../../config/modes';
 import { getWeather } from '../lib/weather';
 import type { Bindings } from '../types';
 
@@ -34,20 +34,23 @@ weather.get('/', async (c) => {
     ctx: c.executionCtx,
   });
 
-  // 体調ごとに何がどう変わるか。base と並べて出すことで補正量が読める
+  // モードごとに何がどう変わるか。base (晴れ20℃) と並べて出すことで補正量が読める。
+  // 距離は散歩時間にも比例するので、30/60/90 を全部出す。
+  const CALM = { condition: 'clear', tempC: 20 } as const;
   const adjust = Object.fromEntries(
-    FEEL_LIST.map((f) => {
-      const eff = effectiveLimits(f.id, snapshot);
-      const base = FEELS[f.id];
-      return [f.id, {
-        label: f.label,
-        maxDistanceM: eff.maxDistanceM,
-        baseMaxDistanceM: base.maxDistanceM,
-        maxRouteM: eff.maxRouteM,
-        baseMaxRouteM: base.maxRouteM,
+    MODE_LIST.map((m) => {
+      const eff = effectiveLimits(m.id, 60, snapshot);
+      return [m.id, {
+        label: MODES[m.id].label,
         shelterWeight: Number(eff.shelterWeight.toFixed(2)),
-        baseShelterWeight: base.weights.shelter,
+        baseShelterWeight: MODES[m.id].weights.shelter,
         note: eff.weatherNote,
+        byMinutes: Object.fromEntries(
+          MINUTES_OPTIONS.map((min) => [min, {
+            maxDistanceM: effectiveLimits(m.id, min, snapshot).maxDistanceM,
+            baseMaxDistanceM: effectiveLimits(m.id, min, CALM).maxDistanceM,
+          }])
+        ),
       }];
     })
   );

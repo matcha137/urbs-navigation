@@ -20,9 +20,16 @@ D1 まで到達できるかを見る。
 { "ok": true, "service": "urbs-navigation", "db": { "ok": true, "places": 409 }, "ts": "..." }
 ```
 
-## GET /api/feels
+## GET /api/modes
 
-体調の選択肢。フロントはラベルをハードコードせずここから引く (T-53)。
+散歩のしかたの選択肢。フロントはラベルをハードコードせずここから引く (T-53)。
+`id` / `label` / `hint` / `emoji` を返す。
+
+## GET /api/stations
+
+出発地点として選べる駅。**江東区の駅だけ**を返す。
+東京駅・新宿駅などを載せない理由は `config/stations.ts` に実測値付きで書いてある
+(新宿駅の最寄りの場所は 8,089m 先、30分圏内 0件)。
 
 ## GET /api/places — T-30 / T-31 / T-32
 
@@ -30,13 +37,13 @@ D1 まで到達できるかを見る。
 |---|---|---|
 | `near` | `35.6816,139.7975` | 指定すると `distanceM` が入り近い順になる |
 | `maxDistanceM` | `450` | `near` と併用のみ |
-| `feel` | `achy` | 体調プロファイルのハードフィルタ (T-32) |
+| `mode` | `indoor` | モードのハードフィルタ (T-32) |
 | `destinationsOnly` | `true` | 行き先にならない施設を除く (既定 `false`) |
 | `ward` / `category` / `stepFree` | `江東区` / `park` / `true` | |
 | `limit` | `50` | 既定 50 / 上限 200 |
 
 ```
-GET /api/places?near=35.6816,139.7975&maxDistanceM=450&feel=achy
+GET /api/places?near=35.6816,139.7975&maxDistanceM=450&mode=indoor
 → { "places": [...], "total": 9 }
 ```
 
@@ -44,7 +51,7 @@ GET /api/places?near=35.6816,139.7975&maxDistanceM=450&feel=achy
 
 ## GET /api/weather — T-34 / T-35
 
-いまの天気と、それが体調プロファイルに与える補正。
+いまの天気と、それがモードに与える補正。距離は散歩時間にも比例するので `byMinutes` に 30/60/90 を並べて返す。
 フロントは `/api/suggest` の `weather` を使うので、これは**補正が効いていることを目で確かめる窓**。
 
 | パラメータ | 例 | 説明 |
@@ -68,7 +75,7 @@ GET /api/places?near=35.6816,139.7975&maxDistanceM=450&feel=achy
 ## POST /api/suggest — T-33
 
 ```json
-{ "feel": "achy", "lat": 35.6816, "lng": 139.7975, "demo": false }
+{ "mode": "stroll", "minutes": 30, "lat": 35.6816, "lng": 139.7975, "demo": false }
 ```
 
 `simulateAiOutage: true` で理由文の生成を飛ばし、ルールベースに落とす (T-73)。
@@ -79,14 +86,14 @@ GET /api/places?near=35.6816,139.7975&maxDistanceM=450&feel=achy
 ## POST /api/search — T-38 / T-39
 
 ```json
-{ "q": "雨でも濡れない静かなところ", "lat": 35.6816, "lng": 139.7975, "feel": "achy", "limit": 10 }
+{ "q": "雨でも濡れない静かなところ", "lat": 35.6816, "lng": 139.7975, "mode": "stroll", "limit": 10 }
 ```
 
 | フィールド | 説明 |
 |---|---|
 | `q` | 自然文。200文字まで |
-| `lat` / `lng` | 省略可。`feel` と併用すると距離も効く |
-| `feel` | 体調のハードフィルタ (T-32) を検索にも適用 |
+| `lat` / `lng` | 省略可。`mode` と併用すると距離も効く (60分・晴れ基準) |
+| `mode` | モードのハードフィルタ (T-32) を検索にも適用 |
 | `simulateVectorOutage` | `true` で縮退経路を通す。UI のリハーサル用 (T-39) |
 
 ```json
@@ -95,7 +102,7 @@ GET /api/places?near=35.6816,139.7975&maxDistanceM=450&feel=achy
 
 `intent` は問い合わせ文から読み取れた条件のラベル。画面に「屋内で絞りました」と出せる。
 
-`GET /api/search?q=...&feel=...&near=lat,lng` も同じ。手で叩く用。
+`GET /api/search?q=...&mode=...&near=lat,lng` も同じ。手で叩く用。
 
 ## POST /api/admin/reindex — T-37
 
@@ -136,7 +143,7 @@ WHERE (step_free IS NULL OR step_free = 1) -- ○ 「段差ありと明記」だ
 ```
 
 `scripts/check-api.mjs` はこれを回帰として見張っている
-(achy の結果に `stepFree === null` が1件も残っていなければ失敗する)。
+(indoor の結果に `stepFree === null` が1件も残っていなければ失敗する)。
 
 ### 行き先にならない施設を除く
 
@@ -195,7 +202,8 @@ WMO コードは4分類 (`clear` / `cloudy` / `rain` / `snow`) に潰す。
 
 ### 補正の効き方 (T-35)
 
-`effectiveLimits(feel, weather)` が唯一の入口。距離・ルート上限・歩数・屋根の重みを一括で返す。
+`effectiveLimits(mode, minutes, weather)` が唯一の入口。距離・ルート上限・歩数・屋根の重みを一括で返す。
+距離の予算は `MINUTES` (散歩時間) が持ち、モードは `distanceScale` を掛けるだけ。
 
 | | 距離 | 屋根の重み |
 |---|---|---|
@@ -337,7 +345,7 @@ D1 の 100個が一番きつい。行き先の除外語19個を**リテラル**�
 
 ### 生成文は KV に24時間キャッシュする
 
-キーは `rz:v{PROMPT_VERSION}:{feel}:{事実表のSHA-256}`。
+キーは `rz:v{PROMPT_VERSION}:{mode}:{事実表のSHA-256}`。
 
 **`config/prompts.ts` を直したら `PROMPT_VERSION` を必ず上げること。**
 事実表は変わらないので、版数を混ぜないと古い文が返り続けて

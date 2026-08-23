@@ -1,5 +1,5 @@
 /**
- * Tokyo Outings / 画面の動き。T-51〜T-59。
+ * TOKYO発進 / 画面の動き。T-51〜T-59。
  *
  * ビルドは無い。素の ES モジュールをそのまま配信している。
  * ハッカソン中に壊れる可能性が一番低い構成を選んだ。
@@ -12,16 +12,11 @@
 // 前提
 // =====================================================================
 
-/**
- * 位置情報が取れなかったときの起点。清澄白河駅。
- *
- * データが江東区しか無いので、**都内の別の場所にいても江東区を見せる**。
- * 位置情報が使えない会場のほうが多いので、ここが実質の既定値になる。
- */
-const FALLBACK_ORIGIN = { lat: 35.6816, lng: 139.7975, label: '清澄白河' };
-
 /** 位置情報をここまでしか待たない。待たされる方が体験として悪い。 */
 const GEO_TIMEOUT_MS = 4000;
+
+/** 散歩時間の既定。config/modes.ts の MINUTES と対応する。 */
+const DEFAULT_MINUTES = 30;
 
 const params = new URLSearchParams(location.search);
 
@@ -40,10 +35,12 @@ const $ = (id) => document.getElementById(id);
 
 const el = {
   boot: $('boot'), app: $('app'),
-  when: $('when'), weather: $('weather'),
-  ask: $('ask'), feels: $('feels'),
-  answered: $('answered'), answeredLabel: $('answered-label'), change: $('change'),
-  plan: $('plan'), headline: $('plan-headline'), title: $('plan-title'),
+  weather: $('weather'),
+  ask: $('ask'), station: $('station'), stationHint: $('station-hint'),
+  minutes: $('minutes'), modes: $('modes'),
+  answered: $('answered'), answeredLine: $('answered-line'), change: $('change'),
+  plan: $('plan'), emoji: $('plan-emoji'), headline: $('plan-headline'),
+  title: $('plan-title'), planMinutes: $('plan-minutes'), planDistance: $('plan-distance'),
   summary: $('plan-summary'), tags: $('plan-tags'), stops: $('stops'),
   footer: $('plan-footer'), another: $('another'), degraded: $('degraded'),
   empty: $('empty'), emptyMessage: $('empty-message'), retry: $('retry'),
@@ -54,9 +51,11 @@ const el = {
 
 /** 画面の状態。ここ以外に状態を持たない。 */
 const state = {
-  origin: null,
-  feels: [],
-  feel: null,
+  stations: [],
+  station: null,
+  minutes: DEFAULT_MINUTES,
+  modes: [],
+  mode: null,
   response: null,
   /** 本命 + 代替 を順に見せるための位置 */
   shown: 0,
@@ -99,35 +98,46 @@ async function getPlace(id) {
 // =====================================================================
 
 /**
- * 現在地を取る。取れなければ既定値。**拒否されても止まらない。**
+ * 現在地を取る。取れなければ null。**拒否されても止まらない。**
  * 許可ダイアログで固まる会場があるので、時間で必ず切る。
  */
-function getOrigin() {
-  if (DEMO || !navigator.geolocation) return Promise.resolve(FALLBACK_ORIGIN);
+function getPosition() {
+  if (DEMO || !navigator.geolocation) return Promise.resolve(null);
 
   return new Promise((resolve) => {
     let done = false;
     const finish = (v) => { if (!done) { done = true; resolve(v); } };
 
-    setTimeout(() => finish(FALLBACK_ORIGIN), GEO_TIMEOUT_MS);
+    setTimeout(() => finish(null), GEO_TIMEOUT_MS);
     navigator.geolocation.getCurrentPosition(
-      (pos) => finish({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: '現在地' }),
-      () => finish(FALLBACK_ORIGIN),
+      (pos) => finish({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => finish(null),
       { timeout: GEO_TIMEOUT_MS, maximumAge: 300000 }
     );
   });
+}
+
+/**
+ * 現在地に一番近い駅。**駅そのものを起点にする**ので、位置情報が取れても
+ * 座標は使わない。データが江東区にしか無いため、区外にいる人の現在地から
+ * 探すと必ず0件になる (config/stations.ts の実測値を参照)。
+ */
+function nearestStation(pos) {
+  if (!pos) return state.stations[0];
+  let best = state.stations[0];
+  let bestD = Infinity;
+  for (const s of state.stations) {
+    const d = (s.lat - pos.lat) ** 2 + (s.lng - pos.lng) ** 2;
+    if (d < bestD) { bestD = d; best = s; }
+  }
+  return best;
 }
 
 // =====================================================================
 // 表示のことば
 // =====================================================================
 
-const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
-
-function todayLine() {
-  const d = new Date();
-  return `${d.getMonth() + 1}月${d.getDate()}日(${WEEK[d.getDay()]}) · 江東区`;
-}
+const distLabel = (m) => (m >= 1000 ? `約${(m / 1000).toFixed(1)}km` : `約${m}m`);
 
 /**
  * 三値の表示。**null を「×」にしない。**
@@ -138,7 +148,7 @@ function triText(value, yes, no) {
   return value ? { text: yes, cls: 'yes' } : { text: no, cls: 'no' };
 }
 
-/** 立ち寄り先の詳細行。デモの4番目のステップで開くところ。 */
+/** 立ち寄り先の詳細行。カードを開くと出るところ。 */
 function accessRows(place) {
   const a = place.access;
   const rows = [];
@@ -177,22 +187,59 @@ function accessRows(place) {
 }
 
 // =====================================================================
-// 描画
+// 描画: 条件を選ぶ
 // =====================================================================
 
-function renderFeels() {
-  el.feels.replaceChildren(...state.feels.map((f) => {
+function renderStations() {
+  el.station.replaceChildren(...state.stations.map((s) => {
+    const o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = `${s.name}（${s.lines}）`;
+    return o;
+  }));
+  el.station.value = state.station.id;
+  el.stationHint.textContent =
+    `対応駅：${state.stations.map((s) => s.name.replace(/駅$/, '')).join('・')}` +
+    '　※データが江東区のため、区内の駅のみです';
+}
+
+function renderMinutes() {
+  el.minutes.replaceChildren(...[30, 60, 90].map((m) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'feel';
-    b.dataset.feel = f.id;
-    b.innerHTML = `<span class="feel-label"></span><span class="feel-hint"></span>`;
-    b.querySelector('.feel-label').textContent = f.label;
-    b.querySelector('.feel-hint').textContent = f.hint;
-    b.addEventListener('click', () => choose(f));
+    b.className = 'seg';
+    b.textContent = `${m}分`;
+    b.setAttribute('aria-pressed', String(m === state.minutes));
+    b.addEventListener('click', () => {
+      state.minutes = m;
+      renderMinutes();
+      // 既にプランを見ている途中なら、その場で組み直す
+      if (state.mode && !el.plan.hidden) choose(state.mode);
+    });
     return b;
   }));
 }
+
+function renderModes() {
+  el.modes.replaceChildren(...state.modes.map((m) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mode';
+    b.dataset.mode = m.id;
+    b.innerHTML =
+      '<span class="mode-icon" aria-hidden="true"></span>' +
+      '<span class="mode-label"></span><span class="mode-hint"></span>';
+    b.querySelector('.mode-icon').textContent = m.emoji;
+    b.querySelector('.mode-label').textContent = m.label;
+    b.querySelector('.mode-hint').textContent = m.hint;
+    b.addEventListener('click', () => choose(m));
+    return b;
+  }));
+}
+
+// =====================================================================
+// 描画: コース
+// =====================================================================
 
 function renderStops(plan) {
   el.stops.replaceChildren(...plan.stops.map((s) => {
@@ -263,8 +310,11 @@ async function toggleStop(head, detail, placeId) {
 }
 
 function renderPlan(plan) {
+  el.emoji.textContent = state.mode?.emoji ?? '';
   el.headline.textContent = plan.headline;
   el.title.textContent = plan.title;
+  el.planMinutes.textContent = `約${plan.estimatedMinutes}分`;
+  el.planDistance.textContent = distLabel(plan.totalDistanceM);
   el.summary.textContent = plan.summary;
   el.footer.textContent = plan.footer;
 
@@ -312,6 +362,9 @@ function renderDegraded(res) {
   if (res.degraded.ai) notes.push('説明文の生成が使えないため、定型の文で表示しています。');
   if (res.weather?.condition === 'rain' || res.weather?.condition === 'snow')
     notes.push('雨のぶん、距離を短くして屋根のある場所を優先しました。');
+  // 水辺は名前からの判定。断定しない (config/destinations.ts)
+  if (state.mode?.id === 'water')
+    notes.push('水辺かどうかは場所の名前から判断しています。川に面していない場所が混じることがあります。');
 
   el.degraded.replaceChildren(...notes.map((t) => {
     const p = document.createElement('p');
@@ -332,22 +385,24 @@ function showEmpty(message) {
   el.sources.hidden = true;
 }
 
-/** T-53 → T-54: 体調を選ぶと問いが1行に畳まれ、下からプランが出る。 */
-async function choose(feel) {
-  state.feel = feel;
+/** T-53 → T-54: しかたを選ぶと条件が畳まれ、下からコースが出る。 */
+async function choose(mode) {
+  state.mode = mode;
   state.shown = 0;
 
   el.ask.hidden = true;
   el.answered.hidden = false;
-  el.answeredLabel.textContent = feel.label;
+  el.answeredLine.textContent =
+    `${state.station.name}から ${state.minutes}分 · ${mode.label}`;
   el.empty.hidden = true;
   el.plan.setAttribute('aria-busy', 'true');
 
   try {
     const res = await postJson('/api/suggest', {
-      feel: feel.id,
-      lat: state.origin.lat,
-      lng: state.origin.lng,
+      mode: mode.id,
+      minutes: state.minutes,
+      lat: state.station.lat,
+      lng: state.station.lng,
       demo: DEMO,
       simulateAiOutage: DEGRADE.has('ai'),
     });
@@ -357,7 +412,7 @@ async function choose(feel) {
     renderPlan(res.plan);
   } catch (e) {
     if (e.code === 'no_candidates') {
-      showEmpty(`${feel.label}の条件に合う場所が、この近くには見つかりませんでした。別の体調を選ぶか、少し移動してからもう一度ためしてください。`);
+      showEmpty(`「${mode.label}」に合う場所が、${state.station.name}の周りには見つかりませんでした。散歩時間を長くするか、別のしかたを選んでください。`);
     } else {
       showEmpty(`うまく取得できませんでした（${e.message}）。`);
     }
@@ -400,9 +455,9 @@ async function runSearch(e) {
   try {
     const res = await postJson('/api/search', {
       q,
-      lat: state.origin.lat,
-      lng: state.origin.lng,
-      feel: state.feel?.id,
+      lat: state.station.lat,
+      lng: state.station.lng,
+      mode: state.mode?.id,
       limit: 6,
       simulateVectorOutage: DEGRADE.has('vector'),
     });
@@ -448,26 +503,32 @@ async function runSearch(e) {
 // =====================================================================
 
 async function boot() {
-  el.when.textContent = todayLine();
-
-  const [feels, origin] = await Promise.all([
-    getJson('/api/feels').catch(() => null),
-    getOrigin(),
+  const [modes, stations, pos] = await Promise.all([
+    getJson('/api/modes').catch(() => null),
+    getJson('/api/stations').catch(() => null),
+    getPosition(),
   ]);
 
-  state.origin = origin;
-
-  if (!feels?.feels?.length) {
+  if (!modes?.modes?.length || !stations?.stations?.length) {
     el.boot.textContent = 'サーバに接続できませんでした。時間をおいて開き直してください。';
     return;
   }
 
-  state.feels = feels.feels;
-  renderFeels();
+  state.modes = modes.modes;
+  state.stations = stations.stations;
+  state.station = nearestStation(pos);
 
+  renderStations();
+  renderMinutes();
+  renderModes();
+
+  el.station.addEventListener('change', () => {
+    state.station = state.stations.find((s) => s.id === el.station.value) ?? state.stations[0];
+    if (state.mode && !el.plan.hidden) choose(state.mode);
+  });
   el.change.addEventListener('click', backToAsk);
   el.another.addEventListener('click', showAnother);
-  el.retry.addEventListener('click', () => state.feel && choose(state.feel));
+  el.retry.addEventListener('click', () => state.mode && choose(state.mode));
   el.searchForm.addEventListener('submit', runSearch);
 
   el.boot.hidden = true;

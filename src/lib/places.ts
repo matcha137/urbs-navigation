@@ -4,8 +4,8 @@
  * ここが SQL を書く唯一の場所。ルート側では文字列を組み立てないこと。
  */
 import type { Place, PlaceAccess, PlaceCategory, PlaceSource } from '../../shared/types';
-import { seatingTierFromArea, type FeelProfile } from '../../config/feels';
-import { NOT_A_DESTINATION } from '../../config/destinations';
+import { seatingTierFromArea, type ModeProfile } from '../../config/modes';
+import { NOT_A_DESTINATION, WATERSIDE_KEYWORDS, WATERSIDE_RIVER } from '../../config/destinations';
 import { Params, distanceExpr } from './sql';
 
 /** v_places の1行。列名はスキーマそのまま。 */
@@ -96,7 +96,7 @@ export function rowToPlace(row: PlaceRow, sources: PlaceSource[]): Place {
 // =====================================================================
 
 /**
- * FeelProfile → WHERE 句の配列。
+ * ModeProfile → WHERE 句の配列。
  *
  * 三値カラムの扱いが肝。`step_free = 1` と書くと段差データを持たない公園
  * (345/409件) が全滅する。「明記された NG だけを外す」形にすること。
@@ -104,12 +104,31 @@ export function rowToPlace(row: PlaceRow, sources: PlaceSource[]): Place {
  * 距離の上限はここに入れない。天気補正が乗る (effectiveLimits) ため、
  * 呼び出し側が maxDistanceM として渡す。
  */
-export function feelConditions(p: FeelProfile): string[] {
+export function modeConditions(p: ModeProfile): string[] {
   const c: string[] = [];
   if (p.requireAccessibleToilet) c.push('accessible_toilet = 1');
   if (p.excludeKnownStepped) c.push('(step_free IS NULL OR step_free = 1)');
   if (p.excludeSlope) c.push('(slope IS NULL OR slope = 0)');
+  if (p.requireShelter) c.push('shelter = 1');
+  if (p.requireWaterside) c.push(watersideCondition());
   return c;
+}
+
+/**
+ * 「水辺」の絞り込み。**名前からの判定**なので、これで当たった場所を
+ * 「水辺にある」と断定してはいけない (config/destinations.ts の注記を参照)。
+ *
+ * destinationConditions と同じ理由でリテラルを埋め込む。
+ * 13語をバインドすると D1 の 100個上限を圧迫する。
+ */
+export function watersideCondition(): string {
+  const likes = WATERSIDE_KEYWORDS
+    .map((kw) => `name LIKE '%${kw.replace(/'/g, "''")}%'`)
+    .join(' OR ');
+  // 「深川」を消してもまだ「川」が残る名前だけを川とみなす。理由は config 側の注記。
+  const { token, ignoreWord } = WATERSIDE_RIVER;
+  const river = `replace(name, '${ignoreWord}', '') LIKE '%${token}%'`;
+  return `(category = 'riverside' OR ${likes} OR ${river})`;
 }
 
 /**
@@ -139,8 +158,8 @@ export interface PlaceQueryOptions {
   near?: { lat: number; lng: number };
   maxDistanceM?: number;
   limit?: number;
-  /** T-32 のハードフィルタ。体調プロファイルをそのまま渡す */
-  feel?: FeelProfile;
+  /** T-32 のハードフィルタ。モードのプロファイルをそのまま渡す */
+  mode?: ModeProfile;
   /** true で「行き先にならない施設」を除く (config/destinations.ts)。suggest は常に true */
   destinationsOnly?: boolean;
   /** この id のものだけに絞る。Vectorize が返した候補を D1 で肉付けするのに使う (T-38) */
@@ -175,7 +194,7 @@ export async function queryPlaces(
   if (opts.ward) where.push(`ward = ${params.add(opts.ward)}`);
   if (opts.category) where.push(`category = ${params.add(opts.category)}`);
   if (opts.stepFree !== undefined) where.push(`step_free = ${params.add(opts.stepFree ? 1 : 0)}`);
-  if (opts.feel) where.push(...feelConditions(opts.feel));
+  if (opts.mode) where.push(...modeConditions(opts.mode));
   if (opts.destinationsOnly) where.push(destinationConditions());
   if (opts.ids) {
     if (!opts.ids.length) return { rows: [], total: 0 }; // IN () は構文エラーになる

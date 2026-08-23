@@ -1,48 +1,39 @@
 {
   "plan": {
-    "id": "plan-good-1",
-    "title": "白河から清澄へ、公園をつなぐ道",
-    "summary": "1.9 km · 1時間ほど · 家から徒歩8分で始まる",
-    "headline": "なら、雨上がりを使いましょう。",
+    "id": "plan-indoor-1",
+    "title": "清澄二丁目公園と、資料館の休憩室",
+    "summary": "700 m · 40分ほど · 屋内で終われる",
+    "headline": "なら、屋根のある場所だけで組みます。",
     "stops": [
       {
         "order": 1,
-        "placeId": "park:AA0131083008",
-        "name": "江東区立白河一丁目公園",
-        "note": "1,550㎡。広さから見て座れる場所がありそう",
-        "stayLabel": "25分",
-        "lat": 35.683196,
-        "lng": 139.800774
-      },
-      {
-        "order": 2,
         "placeId": "park:AA0131083001",
         "name": "江東区立清澄二丁目公園",
-        "note": "車椅子対応トイレが139m以内",
+        "note": "車椅子対応トイレが139m以内にある公園",
         "stayLabel": "20分",
         "lat": 35.682615,
         "lng": 139.796194
       },
       {
-        "order": 3,
+        "order": 2,
         "placeId": "facility:131083000015",
         "name": "江東区深川江戸資料館",
-        "note": "スロープありと登録されている屋内施設",
+        "note": "スロープあり・バリアフリートイレありと登録",
         "stayLabel": "ゆっくり",
         "lat": 35.681189,
         "lng": 139.800595
       }
     ],
     "tags": [
-      "1.9 km",
-      "≈3,100歩",
-      "だれでもトイレあり",
+      "700 m",
+      "車椅子対応トイレ 139m",
+      "スロープあり（施設）",
       "屋内で休める"
     ],
-    "footer": "≈3,100歩 · 途中に車椅子対応トイレ · 最後は屋内",
-    "totalDistanceM": 1900,
-    "estimatedSteps": 3100,
-    "estimatedMinutes": 60,
+    "footer": "≈950歩 · 車椅子対応トイレが139m以内 · 屋内に休める場所",
+    "totalDistanceM": 700,
+    "estimatedSteps": 950,
+    "estimatedMinutes": 40,
     "sources": [
       {
         "datasetName": "江東区 都市公園・都立公園一覧",
@@ -69,40 +60,29 @@
   },
   "alternatives": [
     {
-      "id": "plan-tired-1-alt",
-      "title": "白河一丁目公園から、屋内へ",
-      "summary": "800 m · 35分ほど · 短い方の道",
-      "headline": "なら、短く。すぐ屋内に入れる道で。",
+      "id": "plan-water-1-alt",
+      "title": "福富川公園から、堀ぞいに",
+      "summary": "900 m · 30分ほど · 堀を埋めた道をたどる",
+      "headline": "なら、堀ぞいの道をつなぎます。",
       "stops": [
         {
           "order": 1,
-          "placeId": "park:AA0131083008",
-          "name": "江東区立白河一丁目公園",
-          "note": "1,550㎡。座れる場所がありそうな広さ",
+          "placeId": "park:AA0131083001",
+          "name": "江東区立清澄二丁目公園",
+          "note": "833㎡。トイレは139m先",
           "stayLabel": "15分",
-          "lat": 35.683196,
-          "lng": 139.800774
-        },
-        {
-          "order": 2,
-          "placeId": "facility:131083000015",
-          "name": "江東区深川江戸資料館",
-          "note": "屋内。雨でも濡れずに休める",
-          "stayLabel": "ゆっくり",
-          "lat": 35.681189,
-          "lng": 139.800595
+          "lat": 35.682615,
+          "lng": 139.796194
         }
       ],
       "tags": [
-        "800 m",
-        "≈1,200歩",
-        "座れる場所がありそう",
-        "屋内あり"
+        "900 m",
+        "車椅子対応トイレ 139m"
       ],
-      "footer": "≈1,200歩 · 車椅子対応トイレが4m以内 · 屋内で終われる",
-      "totalDistanceM": 800,
-      "estimatedSteps": 1200,
-      "estimatedMinutes": 35,
+      "footer": "≈1,400歩 · 川・堀の名前がつく場所から選びました",
+      "totalDistanceM": 900,
+      "estimatedSteps": 1400,
+      "estimatedMinutes": 30,
       "sources": [
         {
           "datasetName": "江東区 都市公園・都立公園一覧",
@@ -115,13 +95,6 @@
           "datasetName": "江東区 公衆トイレ一覧",
           "publisher": "江東区",
           "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d0000000019",
-          "license": "クリエイティブ・コモンズ 表示（CC BY）",
-          "retrievedAt": "2026-08-22T00:00:00.000Z"
-        },
-        {
-          "datasetName": "江東区 公共施設一覧",
-          "publisher": "江東区",
-          "sourceUrl": "https://catalog.data.metro.tokyo.lg.jp/dataset/t131083d0000000024",
           "license": "クリエイティブ・コモンズ 表示（CC BY）",
           "retrievedAt": "2026-08-22T00:00:00.000Z"
         }

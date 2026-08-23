@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { FEEL_LIST } from '../config/feels';
+import { MODE_LIST } from '../config/modes';
+import { STATIONS } from '../config/stations';
 import { places } from './routes/places';
 import { suggest } from './routes/suggest';
 import { weather } from './routes/weather';
@@ -30,16 +31,23 @@ app.get('/api/health', async (c) => {
   });
 });
 
-/** 体調の選択肢。フロントはラベルをハードコードせずここから引く (T-53)。 */
-app.get('/api/feels', (c) =>
+/** 散歩のしかたの選択肢。フロントはラベルをハードコードせずここから引く (T-53)。 */
+app.get('/api/modes', (c) =>
   c.json({
-    feels: FEEL_LIST.map((f) => ({
-      id: f.id,
-      label: f.label,
-      hint: f.hint,
+    modes: MODE_LIST.map((m) => ({
+      id: m.id,
+      label: m.label,
+      hint: m.hint,
+      emoji: m.emoji,
     })),
   })
 );
+
+/**
+ * 出発地点として選べる駅。
+ * **江東区の駅だけ。** 理由は config/stations.ts に実測値付きで書いてある。
+ */
+app.get('/api/stations', (c) => c.json({ stations: STATIONS }));
 
 app.route('/api/places', places);
 app.route('/api/suggest', suggest);

@@ -4,11 +4,29 @@
  * ここを変えたら fixtures/ も必ず追随させること (T-08)。
  */
 
-// ---------- 体調 ----------
+// ---------- 散歩のしかた ----------
 
-export type FeelId = 'good' | 'tired' | 'achy' | 'low';
+export type ModeId = 'stroll' | 'water' | 'active' | 'indoor';
 
-export const FEEL_IDS: readonly FeelId[] = ['good', 'tired', 'achy', 'low'] as const;
+export const MODE_IDS: readonly ModeId[] = ['stroll', 'water', 'active', 'indoor'] as const;
+
+/** 散歩時間。config/modes.ts の MINUTES と対応する。 */
+export type Minutes = 30 | 60 | 90;
+
+// ---------- 出発地点 ----------
+
+/**
+ * 選べる駅。**データが江東区にしか無いので江東区の駅だけ**を出す。
+ * 東京駅・新宿駅などを出すと、押しても候補が0件になる (docs/datasets.md)。
+ */
+export interface Station {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  /** 「半蔵門線・大江戸線」など。選ぶときの手がかり。 */
+  lines: string;
+}
 
 // ---------- 場所 ----------
 
@@ -122,7 +140,7 @@ export interface Plan {
   title: string;
   /** サマリ行。例: "1.9 km · 1時間ほど · 家から徒歩8分で始まる" */
   summary: string;
-  /** 体調への応答としての一文。例: "なら、坂のない道にしましょう。" */
+  /** 選んだモードへの応答としての一文。例: "なら、堀ぞいの道をつなぎます。" */
   headline: string;
   stops: PlanStop[];
   /** 表示用ピル。例: ["1.9 km", "≈3,100歩", "段差なし", "座れる場所3つ"] */
@@ -139,7 +157,9 @@ export interface Plan {
 // ---------- API ----------
 
 export interface SuggestRequest {
-  feel: FeelId;
+  mode: ModeId;
+  /** 散歩時間。省略時は 60。 */
+  minutes?: Minutes;
   lat: number;
   lng: number;
   /** 省略時はサーバの現在時刻。 */
@@ -174,6 +194,10 @@ export interface SuggestResponse {
   aiRejected?: string[];
 }
 
+export interface StationsResponse {
+  stations: Station[];
+}
+
 export interface PlacesQuery {
   ward?: string;
   category?: PlaceCategory;
@@ -194,7 +218,7 @@ export interface SearchRequest {
   q: string;
   lat?: number;
   lng?: number;
-  feel?: FeelId;
+  mode?: ModeId;
   limit?: number;
   /**
    * true でベクトル検索を意図的に飛ばし、縮退経路を通す (T-39)。

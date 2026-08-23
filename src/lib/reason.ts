@@ -2,7 +2,7 @@
  * プランの文章を Workers AI に書かせる。T-71 / T-72 / T-73。
  *
  * 生成するのは3つだけ:
- *   headline — 体調への応答の一文
+ *   headline — 選んだしかたへの応答の一文
  *   title    — プランの見出し
  *   notes    — 立ち寄り先ごとの理由
  *
@@ -16,9 +16,9 @@
  *   2. 出てきた文を1つずつ検証する (T-72)
  *   3. 落ちたフィールドだけルールベースの文に戻す。全滅したら degraded.ai
  */
-import type { FeelId, Place, Plan, WeatherSnapshot } from '../../shared/types';
+import type { ModeId, Place, Plan, WeatherSnapshot } from '../../shared/types';
 import {
-  BANNED_WORDS, FEEL_TONE, LIMITS, MIN_LENGTH, PROMPT_VERSION, REASON_MODEL,
+  BANNED_WORDS, MODE_TONE, LIMITS, MIN_LENGTH, PROMPT_VERSION, REASON_MODEL,
   REASON_TIMEOUT_MS, STEP_FREE_CLAIM_RE, SYSTEM_PROMPT,
 } from '../../config/prompts';
 
@@ -39,14 +39,14 @@ const tri = (v: boolean | null, yes: string, no: string) =>
  * 検証 (validate) はこの表に出てくる数字だけを許す。
  */
 export function buildFactSheet(
-  feelLabel: string,
+  modeLabel: string,
   weather: WeatherSnapshot,
   plan: Plan,
   places: Place[]
 ): string {
   const lines: string[] = [
-    `# 相手の状態`,
-    `体調: ${feelLabel}`,
+    `# 相手の希望`,
+    `散歩のしかた: ${modeLabel}`,
     `天気: ${weather.summary}`,
     ``,
     `# プラン全体`,
@@ -228,8 +228,8 @@ function fromText(text: string): ModelOutput | null {
   }
 }
 
-async function callModel(ai: Ai, factSheet: string, feel: FeelId): Promise<ModelOutput | null> {
-  const user = `${FEEL_TONE[feel] ?? ''}\n\n# 事実\n${factSheet}`;
+async function callModel(ai: Ai, factSheet: string, mode: ModeId): Promise<ModelOutput | null> {
+  const user = `${MODE_TONE[mode] ?? ''}\n\n# 事実\n${factSheet}`;
 
   const run = ai.run(REASON_MODEL as never, {
     messages: [
@@ -274,21 +274,21 @@ const sha = async (s: string) => {
  */
 export async function applyReasons(
   env: { AI: Ai; CACHE?: KVNamespace },
-  feel: FeelId,
-  feelLabel: string,
+  mode: ModeId,
+  modeLabel: string,
   weather: WeatherSnapshot,
   plan: Plan,
   places: Place[],
   opts: { simulateOutage?: boolean; ctx?: { waitUntil(p: Promise<unknown>): void } } = {}
 ): Promise<ReasonResult> {
   const rejected: string[] = [];
-  const factSheet = buildFactSheet(feelLabel, weather, plan, places);
+  const factSheet = buildFactSheet(modeLabel, weather, plan, places);
   const numbers = allowedNumbers(factSheet, places.length);
 
   let out: ModelOutput | null = null;
   let source: ReasonResult['source'] = 'none';
   // 版数を混ぜる。プロンプトを直したら古い文が無効になる
-  const key = `rz:v${PROMPT_VERSION}:${feel}:${await sha(factSheet)}`;
+  const key = `rz:v${PROMPT_VERSION}:${mode}:${await sha(factSheet)}`;
 
   try {
     if (opts.simulateOutage) throw new Error('simulated ai outage');
@@ -298,7 +298,7 @@ export async function applyReasons(
       out = cached;
       source = 'kv';
     } else {
-      out = await callModel(env.AI, factSheet, feel);
+      out = await callModel(env.AI, factSheet, mode);
       source = 'ai';
       if (out) {
         const write = env.CACHE?.put(key, JSON.stringify(out), { expirationTtl: CACHE_TTL_S });

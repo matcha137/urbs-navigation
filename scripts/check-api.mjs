@@ -64,15 +64,15 @@ console.log(`対象: ${BASE}\n`);
 {
   // T-32 ハードフィルタ: 三値を潰していないこと
   const all = await get(`/api/places?near=${ORIGIN.lat},${ORIGIN.lng}&maxDistanceM=450&limit=50`);
-  const achy = await get(`/api/places?near=${ORIGIN.lat},${ORIGIN.lng}&maxDistanceM=450&feel=achy&limit=50`);
-  ok(achy.body?.places?.length > 0, 'places(feel=achy): 0件。フィルタが厳しすぎる');
-  ok(achy.body.total <= all.body.total, 'places(feel=achy): 絞れていない');
-  ok(achy.body.places.every((p) => p.access.accessibleToilet), 'places(feel=achy): 車椅子対応トイレ無しが混ざっている');
-  ok(achy.body.places.every((p) => p.access.stepFree !== false), 'places(feel=achy): 段差ありと明記された場所が混ざっている');
+  const indoor = await get(`/api/places?near=${ORIGIN.lat},${ORIGIN.lng}&maxDistanceM=450&mode=indoor&limit=50`);
+  ok(indoor.body?.places?.length > 0, 'places(mode=indoor): 0件。フィルタが厳しすぎる');
+  ok(indoor.body.total <= all.body.total, 'places(mode=indoor): 絞れていない');
+  ok(indoor.body.places.every((p) => p.access.accessibleToilet), 'places(mode=indoor): 車椅子対応トイレ無しが混ざっている');
+  ok(indoor.body.places.every((p) => p.access.stepFree !== false), 'places(mode=indoor): 段差ありと明記された場所が混ざっている');
   // これが肝。NULL(不明) を落としてしまうと公園が全滅する
-  ok(achy.body.places.some((p) => p.access.stepFree === null),
-    'places(feel=achy): stepFree=null が1件も残っていない。三値を潰している');
-  console.log(`places(achy)  ${all.body.total} -> ${achy.body.total} 件 / 不明(null) を残せている`);
+  ok(indoor.body.places.some((p) => p.access.stepFree === null),
+    'places(mode=indoor): stepFree=null が1件も残っていない。三値を潰している');
+  console.log(`places(indoor)  ${all.body.total} -> ${indoor.body.total} 件 / 不明(null) を残せている`);
 }
 {
   // 行き先にならない施設が除かれること
@@ -110,30 +110,34 @@ console.log(`対象: ${BASE}\n`);
   // T-35 雨の補正。距離が縮み、屋根の重みが上がること
   const { body } = await get(`/api/weather?near=${ORIGIN.lat},${ORIGIN.lng}&demo=true`);
   ok(body?.weather?.condition === 'rain', 'weather(demo): 雨になっていない');
-  for (const [feel, a] of Object.entries(body?.adjust ?? {})) {
-    ok(a.maxDistanceM < a.baseMaxDistanceM, `weather(demo): ${feel} の距離が縮んでいない`);
-    ok(a.maxRouteM < a.baseMaxRouteM, `weather(demo): ${feel} のルート上限が縮んでいない`);
-    ok(a.shelterWeight > a.baseShelterWeight, `weather(demo): ${feel} の屋根の重みが上がっていない`);
-    ok(a.note.length > 0, `weather(demo): ${feel} の注記が空`);
+  for (const [mode, a] of Object.entries(body?.adjust ?? {})) {
+    ok(a.shelterWeight > a.baseShelterWeight, `weather(demo): ${mode} の屋根の重みが上がっていない`);
+    ok(a.note.length > 0, `weather(demo): ${mode} の注記が空`);
+    for (const [min, d] of Object.entries(a.byMinutes ?? {})) {
+      ok(d.maxDistanceM < d.baseMaxDistanceM, `weather(demo): ${mode}/${min}分 の距離が縮んでいない`);
+    }
   }
-  const g = body.adjust.good;
-  console.log(`weather(雨)   good ${g.baseMaxDistanceM}m -> ${g.maxDistanceM}m / 屋根 ${g.baseShelterWeight} -> ${g.shelterWeight}`);
+  const g = body.adjust.active.byMinutes[60];
+  console.log(`weather(雨)   active 60分 ${g.baseMaxDistanceM}m -> ${g.maxDistanceM}m / ` +
+    `屋根 ${body.adjust.active.baseShelterWeight} -> ${body.adjust.active.shelterWeight}`);
 }
 {
   // 取得に失敗しても止まらないこと。Open-Meteo が 400 を返す座標で確かめる
   const { body } = await get('/api/weather?near=999,999');
   ok(body?.source === 'fallback', `weather(縮退): fallback にならない (${body?.source})`);
   ok(body?.degraded === true, 'weather(縮退): degraded が立っていない');
-  ok(body?.adjust?.good?.maxDistanceM === body?.adjust?.good?.baseMaxDistanceM,
+  ok(body?.adjust?.active?.byMinutes?.[60]?.maxDistanceM
+     === body?.adjust?.active?.byMinutes?.[60]?.baseMaxDistanceM,
     'weather(縮退): 既定値なのに距離が補正されている');
   console.log(`weather(縮退) ${body?.weather?.summary} / 補正なしで続行`);
 }
 
 // ---------- T-33: /api/suggest ----------
-for (const feel of ['good', 'tired', 'achy', 'low']) {
+for (const mode of ['active', 'stroll', 'indoor', 'water']) {
   for (const demo of [false, true]) {
-    const label = `${feel}${demo ? '(雨)' : ''}`;
-    const { status, body } = await post('/api/suggest', { feel, ...ORIGIN, demo });
+    const minutes = demo ? 30 : 60;
+    const label = `${mode}/${minutes}分${demo ? '(雨)' : ''}`;
+    const { status, body } = await post('/api/suggest', { mode, minutes, ...ORIGIN, demo });
     if (status !== 200) { errors.push(`suggest ${label}: ${status} ${body?.message ?? ''}`); continue; }
 
     const p = body.plan;
@@ -148,15 +152,47 @@ for (const feel of ['good', 'tired', 'achy', 'low']) {
     const ids = p.stops.map((s) => s.placeId);
     ok(new Set(ids).size === ids.length, `suggest ${label}: 同じ場所が2回入っている`);
 
-    // 車椅子対応と書いた以上、全ての立ち寄り先で実際に立っていること (achy のみ必須)
-    if (feel === 'achy')
-      ok(p.stops.every((s) => ids.includes(s.placeId)), `suggest ${label}: placeId が壊れている`);
+    // モードの約束をプランが守っているか。ここが破れると画面が嘘をつく
+    if (mode === 'indoor')
+      ok(p.tags.some((t) => t.includes('屋内')) || /屋内/.test(p.footer),
+        `suggest ${label}: 屋内モードなのに屋内の記載が無い`);
+    if (mode === 'water')
+      ok(/名前がつく場所から選びました/.test(p.footer),
+        `suggest ${label}: 水辺が名前からの判定だと書いていない`);
 
     if (demo) ok(/雨/.test(p.footer), `suggest ${label}: 天気の注記がフッタに出ていない`);
 
     console.log(`suggest ${label.padEnd(10)} ${p.stops.length}箇所 ${p.totalDistanceM}m ` +
       `alt${body.alternatives.length} — ${p.title}`);
   }
+}
+
+{
+  // 散歩時間が距離に効いていること。効いていないとボタンが飾りになる
+  const dists = [];
+  for (const minutes of [30, 60, 90]) {
+    const { status, body } = await post('/api/suggest', { mode: 'active', minutes, ...ORIGIN });
+    if (status !== 200) { errors.push(`suggest 時間比較 ${minutes}分: ${status}`); continue; }
+    dists.push([minutes, body.plan.totalDistanceM, body.plan.stops.length]);
+  }
+  if (dists.length === 3) {
+    ok(dists[0][1] < dists[2][1], `散歩時間: 30分(${dists[0][1]}m) より 90分(${dists[2][1]}m) が短い`);
+    console.log('散歩時間      ' + dists.map(([m, d, n]) => `${m}分:${d}m/${n}箇所`).join('  '));
+  }
+}
+
+// ---------- T-53: 選択肢の供給 ----------
+{
+  const { body: modes } = await get('/api/modes');
+  ok(modes?.modes?.length === 4, 'modes: 4件でない');
+  ok(modes.modes.every((m) => m.label && m.hint && m.emoji), 'modes: label/hint/emoji が欠けている');
+
+  const { body: st } = await get('/api/stations');
+  ok(st?.stations?.length > 0, 'stations: 空');
+  // 江東区の外の駅を出すと、押した先で必ず0件になる
+  ok(st.stations.every((s) => s.lat > 35.62 && s.lat < 35.72 && s.lng > 139.77 && s.lng < 139.85),
+    'stations: 江東区の外の駅が混ざっている');
+  console.log(`選択肢        しかた${modes.modes.length}件 / 駅${st.stations.length}件`);
 }
 
 // ---------- T-36〜T-39: /api/search ----------
@@ -219,7 +255,7 @@ for (const feel of ['good', 'tired', 'achy', 'low']) {
   const cases = [
     [400, () => post('/api/search', {}), 'q 欠落'],
     [400, () => post('/api/search', { q: 'あ'.repeat(201) }), 'q が長すぎる'],
-    [400, () => post('/api/search', { q: '公園', feel: 'sleepy' }), 'feel 不正'],
+    [400, () => post('/api/search', { q: '公園', mode: 'sleepy' }), 'mode 不正'],
     [403, () => fetch(`${BASE}/api/admin/reindex`, { method: 'POST' }).then((r) => ({ status: r.status })), '合言葉なしの reindex'],
   ];
   for (const [want, run, label] of cases) {
@@ -236,15 +272,15 @@ for (const feel of ['good', 'tired', 'achy', 'low']) {
   // config/prompts.ts の BANNED_WORDS の要点を写したもの
   const FORBIDDEN = /ベンチ|手すり|遊具|静か|景色|眺め|桜|営業|無料|駅から|徒歩|気晴らし|元気を出|頑張/;
 
-  for (const feel of ['good', 'tired', 'achy', 'low']) {
-    const { body } = await post('/api/suggest', { feel, ...ORIGIN });
+  for (const mode of ['active', 'stroll', 'indoor', 'water']) {
+    const { body } = await post('/api/suggest', { mode, ...ORIGIN });
     const p = body?.plan;
-    if (!p) { errors.push(`reason ${feel}: プランが返らない`); continue; }
+    if (!p) { errors.push(`reason ${mode}: プランが返らない`); continue; }
 
     const texts = [p.headline, p.title, ...p.stops.map((s) => s.note)];
     for (const t of texts) {
       const hit = t?.match(FORBIDDEN);
-      ok(!hit, `reason ${feel}: データに無い語「${hit?.[0]}」が出ている — "${t}"`);
+      ok(!hit, `reason ${mode}: データに無い語「${hit?.[0]}」が出ている — "${t}"`);
     }
 
     // 数字は事実に出てくるものだけ。距離・面積・トイレ距離・所要・歩数
@@ -273,9 +309,9 @@ for (const feel of ['good', 'tired', 'achy', 'low']) {
     for (const t of [p.headline, p.title]) {
       if (!allStepFree)
         ok(!/段差|バリアフリー|平坦|フラット/.test(t),
-          `reason ${feel}: 段差不明を含むのに見出しが「${t}」`);
+          `reason ${mode}: 段差不明を含むのに見出しが「${t}」`);
       if (!allShelter)
-        ok(!/屋内|室内|雨をしのげ/.test(t), `reason ${feel}: 屋外を含むのに見出しが「${t}」`);
+        ok(!/屋内|室内|雨をしのげ/.test(t), `reason ${mode}: 屋外を含むのに見出しが「${t}」`);
     }
 
     // 段差不明の場所に「段差なし」と書いていないこと
@@ -283,21 +319,21 @@ for (const feel of ['good', 'tired', 'achy', 'low']) {
       const pl = (await get(`/api/places/${encodeURIComponent(stop.placeId)}`)).body;
       if (pl?.access?.stepFree !== true)
         ok(!/段差|バリアフリー|平坦|フラット/.test(stop.note),
-          `reason ${feel}: 段差不明の ${stop.name} が段差に言及している — "${stop.note}"`);
+          `reason ${mode}: 段差不明の ${stop.name} が段差に言及している — "${stop.note}"`);
       if (!pl?.access?.shelter)
         ok(!/屋内|室内|雨をしのげ/.test(stop.note),
-          `reason ${feel}: 屋外の ${stop.name} を屋内と書いている — "${stop.note}"`);
+          `reason ${mode}: 屋外の ${stop.name} を屋内と書いている — "${stop.note}"`);
       if (!pl?.access?.accessibleToilet)
         ok(!/車椅子|車いす/.test(stop.note),
-          `reason ${feel}: 車椅子対応でない ${stop.name} に車椅子と書いている — "${stop.note}"`);
+          `reason ${mode}: 車椅子対応でない ${stop.name} に車椅子と書いている — "${stop.note}"`);
     }
 
-    console.log(`reason ${feel.padEnd(6)} ai縮退=${body.degraded.ai} — ${p.headline} / ${p.title}`);
+    console.log(`reason ${mode.padEnd(6)} ai縮退=${body.degraded.ai} — ${p.headline} / ${p.title}`);
   }
 }
 {
   // T-73 縮退。AI が落ちてもルールベースの文で返ること
-  const { body } = await post('/api/suggest', { feel: 'achy', ...ORIGIN, simulateAiOutage: true });
+  const { body } = await post('/api/suggest', { mode: 'indoor', ...ORIGIN, simulateAiOutage: true });
   ok(body?.degraded?.ai === true, 'reason(縮退): degraded.ai が立っていない');
   ok(body?.plan?.headline?.length > 0, 'reason(縮退): headline が空');
   ok(body?.plan?.stops?.every((s) => s.note?.length > 0), 'reason(縮退): note が空');
@@ -359,15 +395,15 @@ if (process.env.ADMIN_TOKEN) {
 // ---------- 入力の検査 ----------
 {
   const cases = [
-    [400, () => post('/api/suggest', { feel: 'sleepy', ...ORIGIN }), 'feel 不正'],
-    [400, () => post('/api/suggest', { feel: 'low' }), 'lat/lng 欠落'],
-    [400, () => post('/api/suggest', { feel: 'low', lat: 34.7, lng: 135.5 }), '東京の範囲外'],
+    [400, () => post('/api/suggest', { mode: 'sleepy', ...ORIGIN }), 'mode 不正'],
+    [400, () => post('/api/suggest', { mode: 'water' }), 'lat/lng 欠落'],
+    [400, () => post('/api/suggest', { mode: 'water', lat: 34.7, lng: 135.5 }), '東京の範囲外'],
     [400, () => post('/api/suggest', 'not json'), 'JSON でない'],
     [400, () => get('/api/places?near=abc'), 'near 不正'],
     [400, () => get('/api/places?category=izakaya'), 'category 不正'],
     [400, () => get('/api/places?maxDistanceM=300'), 'maxDistanceM 単独'],
     [404, () => get('/api/places/nope:1'), '存在しない id'],
-    [404, () => post('/api/suggest', { feel: 'achy', lat: 35.61, lng: 139.79 }), '候補ゼロ'],
+    [404, () => post('/api/suggest', { mode: 'indoor', lat: 35.61, lng: 139.79 }), '候補ゼロ'],
   ];
   for (const [want, run, label] of cases) {
     const { status } = await run();

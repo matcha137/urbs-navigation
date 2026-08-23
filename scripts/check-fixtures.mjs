@@ -5,7 +5,7 @@
  */
 import { readFileSync } from 'node:fs';
 
-const FEELS = ['good', 'tired', 'achy', 'low'];
+const MODES = ['active', 'stroll', 'indoor', 'water'];
 const CONDITIONS = ['clear', 'cloudy', 'rain', 'snow'];
 const errors = [];
 
@@ -41,8 +41,8 @@ const checkPlan = (file, p, label) => {
   });
 };
 
-for (const feel of FEELS) {
-  const file = `fixtures/suggest.${feel}.json`;
+for (const mode of MODES) {
+  const file = `fixtures/suggest.${mode}.json`;
   let body;
   try { body = JSON.parse(readFileSync(file, 'utf8')); }
   catch (e) { errors.push(`${file}: 読めない / JSON 不正 — ${e.message}`); continue; }
@@ -67,4 +67,4 @@ if (errors.length) {
   console.error('✗ fixtures が型と食い違っています:\n' + errors.map((e) => '  - ' + e).join('\n'));
   process.exit(1);
 }
-console.log(`✓ fixtures ${FEELS.length} 件 OK (SuggestResponse に適合)`);
+console.log(`✓ fixtures ${MODES.length} 件 OK (SuggestResponse に適合)`);

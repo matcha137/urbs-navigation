@@ -13,7 +13,7 @@
  */
 import { Hono } from 'hono';
 import { EMBED_BATCH, embedAll, embedText, findBoilerplate } from '../lib/embed';
-import { FEEL_TONE, REASON_MODEL, SYSTEM_PROMPT } from '../../config/prompts';
+import { MODE_TONE, REASON_MODEL, SYSTEM_PROMPT } from '../../config/prompts';
 import { validate } from '../lib/reason';
 import type { Bindings } from '../types';
 
@@ -170,7 +170,7 @@ admin.post('/reason-probe', async (c) => {
     raw = await c.env.AI.run(REASON_MODEL as never, {
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `${FEEL_TONE.achy}
+        { role: 'user', content: `${MODE_TONE.indoor}
 
 # 事実
 ${factSheet}` },
