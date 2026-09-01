@@ -43,5 +43,7 @@ for (;;) {
 
 console.log(`\n-> ${total} 件を索引に入れた (${((Date.now() - started) / 1000).toFixed(1)}s)`);
 
-const info = await fetch(`${BASE}/api/admin/index-info`).then((r) => r.json());
+const info = await fetch(`${BASE}/api/admin/index-info`, {
+  headers: { 'x-admin-token': TOKEN },
+}).then((r) => r.json());
 console.log(`索引: ${JSON.stringify(info.vectorize)} / D1: ${info.d1Places} 件`);

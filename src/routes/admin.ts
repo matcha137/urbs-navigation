@@ -10,6 +10,7 @@
  *   wrangler secret put ADMIN_TOKEN
  *
  * ADMIN_TOKEN が設定されていなければ 503 を返す (開けっ放しにしない)。
+ * 検査は下の admin.use('*') が**この配下すべて**に対して1箇所でかける。
  */
 import { Hono } from 'hono';
 import { EMBED_BATCH, embedAll, embedText, findBoilerplate } from '../lib/embed';
@@ -29,13 +30,25 @@ const DELETE_BATCH = 100;
 
 export const admin = new Hono<{ Bindings: Bindings }>();
 
-admin.post('/reindex', async (c) => {
+/**
+ * 合言葉の検査。**ここ1箇所でルータ全体を守る。**
+ *
+ * 経路ごとに書くと足し忘れる。実際 inspect / validate-probe / index-info の
+ * 3つが検査なしで外から叩ける状態になっていた。あとから足した経路も
+ * 自動で守られるよう、ルート定義より前に use() で挟む形にしてある。
+ *
+ * ADMIN_TOKEN が未設定なら 503。開けっ放しにはしない。
+ */
+admin.use('*', async (c, next) => {
   const expected = c.env.ADMIN_TOKEN;
   if (!expected)
     return c.json({ error: 'unavailable', message: 'ADMIN_TOKEN が未設定。wrangler secret put ADMIN_TOKEN' }, 503);
   if (c.req.header('x-admin-token') !== expected)
     return c.json({ error: 'forbidden' }, 403);
+  await next();
+});
 
+admin.post('/reindex', async (c) => {
   const offset = Math.max(0, Number(c.req.query('offset')) || 0);
   const limit = Math.min(300, Math.max(1, Number(c.req.query('limit')) || DEFAULT_LIMIT));
 
@@ -141,10 +154,6 @@ admin.get('/inspect/:id', async (c) => {
  * 生の応答・JSON として取れたか・検証の結果を並べて返す。
  */
 admin.post('/reason-probe', async (c) => {
-  const expected = c.env.ADMIN_TOKEN;
-  if (!expected) return c.json({ error: 'unavailable' }, 503);
-  if (c.req.header('x-admin-token') !== expected) return c.json({ error: 'forbidden' }, 403);
-
   const factSheet = `# 相手の状態
 体調: 体が痛い
 天気: 22° · くもり
@@ -240,12 +249,6 @@ admin.post('/validate-probe', async (c) => {
  *   curl -XPOST .../api/admin/forget -H 'x-admin-token: …' -d '{"ids":["park:AA0131083001"]}'
  */
 admin.post('/forget', async (c) => {
-  const expected = c.env.ADMIN_TOKEN;
-  if (!expected)
-    return c.json({ error: 'unavailable', message: 'ADMIN_TOKEN が未設定' }, 503);
-  if (c.req.header('x-admin-token') !== expected)
-    return c.json({ error: 'forbidden' }, 403);
-
   const body = await c.req.json<{ ids?: unknown }>().catch(() => ({ ids: undefined }));
   const ids = Array.isArray(body.ids) ? body.ids.filter((x): x is string => typeof x === 'string') : [];
   if (!ids.length) return c.json({ error: 'bad_request', message: 'ids は文字列の配列' }, 400);
