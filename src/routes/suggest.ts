@@ -23,9 +23,7 @@ import type { Bindings } from '../types';
 /** スコアリングに回す候補の上限。多すぎても順位が変わらないので頭を打つ。 */
 const CANDIDATE_LIMIT = 60;
 
-export const suggest = new Hono<{ Bindings: Bindings }>();
-
-suggest.post('/', async (c) => {
+export const suggest = new Hono<{ Bindings: Bindings }>().post('/', async (c) => {
   let body: Partial<SuggestRequest>;
   try {
     body = await c.req.json();

@@ -68,9 +68,8 @@ const FALLBACK_LIKE_MAX_LEN = 8;
 const blend = (vector: number, intent: number) =>
   vector * (1 - INTENT_WEIGHT) + intent * INTENT_WEIGHT;
 
-export const search = new Hono<{ Bindings: Bindings }>();
-
-search.post('/', async (c) => {
+/** 本体。下の GET からも呼ぶので、公開する `search` とは分けて持つ。 */
+const searchPost = new Hono<{ Bindings: Bindings }>().post('/', async (c) => {
   let body: Partial<SearchRequest>;
   try {
     body = await c.req.json();
@@ -180,12 +179,16 @@ function rank(places: Place[], intent: QueryIntent, ranked: Map<string, number> 
   return scored.map((x) => x.p);
 }
 
+export const search = new Hono<{ Bindings: Bindings }>()
+
+.route('/', searchPost)
+
 /** 手で叩いて確かめる用。本体は POST と同じ。 */
-search.get('/', async (c) => {
+.get('/', async (c) => {
   const q = c.req.query('q');
   if (!q) return c.json({ error: 'bad_request', message: 'q が必要' }, 400);
   const near = c.req.query('near')?.split(',').map(Number);
-  return search.fetch(
+  return searchPost.fetch(
     new Request(new URL('/', c.req.url), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

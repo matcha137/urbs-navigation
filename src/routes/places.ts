@@ -31,9 +31,9 @@ function parseNear(raw: string | undefined): { lat: number; lng: number } | unde
   return { lat, lng };
 }
 
-export const places = new Hono<{ Bindings: Bindings }>();
+export const places = new Hono<{ Bindings: Bindings }>()
 
-places.get('/', async (c) => {
+.get('/', async (c) => {
   const q = c.req.query();
 
   const near = parseNear(q.near);
@@ -64,10 +64,10 @@ places.get('/', async (c) => {
 
   const body: PlacesResponse = { places: await hydrate(c.env.DB, rows), total };
   return c.json(body);
-});
+})
 
 /** 単体取得。queryPlaces は一覧用で id 条件を持たないため、ここだけ直接引く。 */
-places.get('/:id', async (c) => {
+.get('/:id', async (c) => {
   const row = await c.env.DB
     .prepare('SELECT * FROM v_places WHERE id = ?1')
     .bind(c.req.param('id'))
