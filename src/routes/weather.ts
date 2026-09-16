@@ -16,9 +16,7 @@ import type { Bindings } from '../types';
 /** 起点を省略したときの既定。デモ起点 (清澄白河駅)。 */
 const DEFAULT_ORIGIN = { lat: 35.6816, lng: 139.7975 };
 
-export const weather = new Hono<{ Bindings: Bindings }>();
-
-weather.get('/', async (c) => {
+export const weather = new Hono<{ Bindings: Bindings }>().get('/', async (c) => {
   const raw = c.req.query('near');
   let origin = DEFAULT_ORIGIN;
   if (raw) {

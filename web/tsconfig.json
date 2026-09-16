@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx/dom"
+  },
+  // AppType を引くために src/ の型も読む。Worker 側の型 (D1Database など) は
+  // 親の types で入る。DOM と重なる宣言の衝突は skipLibCheck で黙らせている
+  "include": ["./**/*.ts", "./**/*.tsx", "../src/**/*.ts", "../shared/**/*.ts", "../config/**/*.ts"]
+}

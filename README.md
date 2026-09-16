@@ -130,6 +130,7 @@ npm install
 npm run dev
 ```
 
+Vite の開発サーバ (http://localhost:5173) の中で Worker も動く。フロントを直すとその場で反映される。
 D1・KV・Vectorize・Workers AI は本番のものに繋がるので `wrangler login` が要る。
 管理エンドポイント (`/api/admin/*`) を叩くときだけ `.dev.vars` の `ADMIN_TOKEN` も要る。
 
@@ -177,11 +178,15 @@ ETL側の判定（JS）と API側の判定（SQL）が二重管理になって�
 
 ## 構成
 
-ビルドステップは無い。フロントは `public/` の素の ES モジュール1枚。
+フロントは Hono 同梱の JSX (`hono/jsx/dom`) で書き、Vite でビルドする。
+`@cloudflare/vite-plugin` が Worker とフロントを1つの開発サーバ・1回のビルドにまとめる。
+API は `hc<AppType>` (Hono RPC) で呼ぶので、Worker の返す型がそのままフロントに届く。
 
 ```
-public/          画面。ビルド無し
-src/             Worker (Hono)
+index.html       画面の入口 (Vite のエントリ)
+web/             画面。App.tsx が状態を持ち、components/ は描くだけ
+  api.ts         hc クライアント。リクエストの型はここで shared/types.ts に合わせる
+src/             Worker (Hono)。index.ts が AppType を出す
   routes/        places / suggest / weather / search / admin
   lib/           plan(採点) sql places weather embed intent reason
 config/          モード定義・駅・しきい値・プロンプト。ETLとAPIが共有する唯一の正
@@ -198,7 +203,7 @@ docs/            調査・API・デモ台本
 | Vectorize `urbs-places` | 自然文検索の索引（1,411件 / 1024次元 / cosine） | ことばの一致に縮退 |
 | Workers AI | 埋め込み `bge-m3` / 理由文 `llama-3.3-70b` | 定型文に縮退 |
 | KV `CACHE` | 天気30分 / 理由文24時間 | 都度取りに行くだけ |
-| Assets `ASSETS` | `public/` の配信 | 止まる |
+| Assets `ASSETS` | `vite build` が出す `dist/client` の配信 | 止まる |
 
 縮退したことは `degraded` フラグで返し、画面にも書く。黙って質を落とさない。
 

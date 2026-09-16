@@ -10,10 +10,14 @@ import type { Bindings } from './types';
 
 export type { Bindings };
 
-const app = new Hono<{ Bindings: Bindings }>();
+/**
+ * ルートは**メソッドチェーンで繋ぐ**。`app.get(...)` を文として並べると
+ * 戻り値の型が捨てられ、フロントの `hc<AppType>` から経路が見えなくなる。
+ */
+const app = new Hono<{ Bindings: Bindings }>()
 
 /** 疎通確認。D1 まで到達できるかをここで見る。 */
-app.get('/api/health', async (c) => {
+.get('/api/health', async (c) => {
   let db: { ok: boolean; places?: number; error?: string };
   try {
     const one = await c.env.DB.prepare('SELECT 1 AS ok').first<{ ok: number }>();
@@ -29,10 +33,10 @@ app.get('/api/health', async (c) => {
     db,
     ts: new Date().toISOString(),
   });
-});
+})
 
 /** 散歩のしかたの選択肢。フロントはラベルをハードコードせずここから引く (T-53)。 */
-app.get('/api/modes', (c) =>
+.get('/api/modes', (c) =>
   c.json({
     modes: MODE_LIST.map((m) => ({
       id: m.id,
@@ -41,7 +45,7 @@ app.get('/api/modes', (c) =>
       emoji: m.emoji,
     })),
   })
-);
+)
 
 /**
  * 出発地点として選べる駅。
@@ -51,13 +55,16 @@ app.get('/api/modes', (c) =>
  * フロントはここに無いモードを選べないようにする (0件の画面を出さないため)。
  * `wards` は optgroup の並び順。
  */
-app.get('/api/stations', (c) => c.json({ wards: WARDS, stations: STATIONS }));
+.get('/api/stations', (c) => c.json({ wards: WARDS, stations: STATIONS }))
 
-app.route('/api/places', places);
-app.route('/api/suggest', suggest);
-app.route('/api/weather', weather);
-app.route('/api/search', search);
-app.route('/api/admin', admin);
+.route('/api/places', places)
+.route('/api/suggest', suggest)
+.route('/api/weather', weather)
+.route('/api/search', search)
+.route('/api/admin', admin);
+
+/** フロント (web/) が `hc<AppType>` で型付きに API を呼ぶための型。 */
+export type AppType = typeof app;
 
 /**
  * 想定外の例外。D1 が落ちた・SQL が壊れた等がここに来る。
