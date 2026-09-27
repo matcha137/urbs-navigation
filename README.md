@@ -130,7 +130,7 @@ npm install
 npm run dev
 ```
 
-Vite の開発サーバ (http://localhost:5173) の中で Worker も動く。フロントを直すとその場で反映される。
+Vite+ の開発サーバ (`vp dev`、http://localhost:5173) の中で Worker も動く。フロントを直すとその場で反映される。
 D1・KV・Vectorize・Workers AI は本番のものに繋がるので `wrangler login` が要る。
 管理エンドポイント (`/api/admin/*`) を叩くときだけ `.dev.vars` の `ADMIN_TOKEN` も要る。
 
@@ -169,7 +169,7 @@ npm run deploy
 npm run check
 ```
 
-`check` は型・フィクスチャ・正規化結果を見る（ネットワーク不要）。
+`check` は型・lint (`vp lint`)・フィクスチャ・正規化結果を見る（ネットワーク不要）。
 本番に対する通しの確認は `npm run check:api`。
 全24駅 × 申告したモードの65通りを叩いて、**押せる組み合わせがすべて候補を返すか**を検査する。
 ETL側の判定（JS）と API側の判定（SQL）が二重管理になっているので、ここでズレを捕まえる。
@@ -178,7 +178,7 @@ ETL側の判定（JS）と API側の判定（SQL）が二重管理になって�
 
 ## 構成
 
-フロントは Hono 同梱の JSX (`hono/jsx/dom`) で書き、Vite でビルドする。
+フロントは Hono 同梱の JSX (`hono/jsx/dom`) で書き、Vite+ (`vp build`) でビルドする。
 `@cloudflare/vite-plugin` が Worker とフロントを1つの開発サーバ・1回のビルドにまとめる。
 API は `hc<AppType>` (Hono RPC) で呼ぶので、Worker の返す型がそのままフロントに届く。
 
@@ -203,7 +203,7 @@ docs/            調査・API・デモ台本
 | Vectorize `urbs-places` | 自然文検索の索引（1,411件 / 1024次元 / cosine） | ことばの一致に縮退 |
 | Workers AI | 埋め込み `bge-m3` / 理由文 `llama-3.3-70b` | 定型文に縮退 |
 | KV `CACHE` | 天気30分 / 理由文24時間 | 都度取りに行くだけ |
-| Assets `ASSETS` | `vite build` が出す `dist/client` の配信 | 止まる |
+| Assets `ASSETS` | `vp build` が出す `dist/client` の配信 | 止まる |
 
 縮退したことは `degraded` フラグで返し、画面にも書く。黙って質を落とさない。
 
