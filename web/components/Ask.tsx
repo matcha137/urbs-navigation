@@ -22,9 +22,13 @@ export function Ask(props: Props) {
   return (
     <section class="ask">
       <div class="card">
-        <h2 class="card-label"><span aria-hidden="true">📍</span> 出発地点</h2>
+        <h2 class="card-label">
+          <span aria-hidden="true">📍</span> 出発地点
+        </h2>
         <div class="select-wrap">
-          <label class="sr-only" for="station">出発する駅</label>
+          <label class="sr-only" for="station">
+            出発する駅
+          </label>
           <select
             id="station"
             class="field"
@@ -37,9 +41,13 @@ export function Ask(props: Props) {
             {/* 区ごとに optgroup で束ねる。駅名だけ並べると24件が延々続いて選べない */}
             {wards.map((ward) => (
               <optgroup label={ward}>
-                {stations.filter((s) => s.ward === ward).map((s) => (
-                  <option value={s.id} selected={s.id === station.id}>{s.name}（{s.lines}）</option>
-                ))}
+                {stations
+                  .filter((s) => s.ward === ward)
+                  .map((s) => (
+                    <option value={s.id} selected={s.id === station.id}>
+                      {s.name}（{s.lines}）
+                    </option>
+                  ))}
               </optgroup>
             ))}
           </select>
@@ -51,7 +59,9 @@ export function Ask(props: Props) {
       </div>
 
       <div class="card">
-        <h2 class="card-label"><span aria-hidden="true">⏱</span> 散歩時間を選ぶ</h2>
+        <h2 class="card-label">
+          <span aria-hidden="true">⏱</span> 散歩時間を選ぶ
+        </h2>
         <div class="segmented" role="group" aria-label="散歩時間">
           {MINUTES.map((m) => (
             <button
@@ -78,9 +88,13 @@ export function Ask(props: Props) {
               aria-disabled={ok ? undefined : 'true'}
               onClick={ok ? () => props.onMode(m) : undefined}
             >
-              <span class="mode-icon" aria-hidden="true">{m.emoji}</span>
+              <span class="mode-icon" aria-hidden="true">
+                {m.emoji}
+              </span>
               <span class="mode-label">{m.label}</span>
-              <span class="mode-hint">{ok ? m.hint : unavailableReason(m.id, station, stations)}</span>
+              <span class="mode-hint">
+                {ok ? m.hint : unavailableReason(m.id, station, stations)}
+              </span>
             </button>
           );
         })}

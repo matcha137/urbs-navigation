@@ -41,8 +41,14 @@ export interface Station {
 // ---------- 場所 ----------
 
 export type PlaceCategory =
-  | 'park' | 'garden' | 'riverside' | 'shrine'
-  | 'facility' | 'cafe' | 'toilet' | 'other';
+  | 'park'
+  | 'garden'
+  | 'riverside'
+  | 'shrine'
+  | 'facility'
+  | 'cafe'
+  | 'toilet'
+  | 'other';
 
 /**
  * バリアフリー属性。すべて place_access テーブル由来。

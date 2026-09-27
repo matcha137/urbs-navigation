@@ -18,7 +18,10 @@ export type SearchBody = InferResponseType<typeof client.api.search.$post, 200>;
 
 /** API が返したエラー。`code` は本文の `error` (no_candidates など)。 */
 export class ApiError extends Error {
-  constructor(message: string, readonly code?: string) {
+  constructor(
+    message: string,
+    readonly code?: string,
+  ) {
     super(message);
   }
 }

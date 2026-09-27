@@ -24,8 +24,8 @@ export const STATIONS: Station[] = stationCfg.stations.map((s) => ({
   lat: s.lat,
   lng: s.lng,
   lines: s.lines,
-  modes: (stationModes.stations as Record<string, { modes: string[] }>)[s.id]
-    ?.modes as ModeId[] ?? [],
+  modes:
+    ((stationModes.stations as Record<string, { modes: string[] }>)[s.id]?.modes as ModeId[]) ?? [],
 }));
 
 /** 区ごとの並び。ドロップダウンの optgroup がこの順に出る。 */
@@ -40,7 +40,10 @@ export function nearestStation(lat: number, lng: number): Station {
   let bestD = Infinity;
   for (const s of STATIONS) {
     const d = (s.lat - lat) ** 2 + (s.lng - lng) ** 2; // 順位が分かればいいので平方のまま
-    if (d < bestD) { bestD = d; best = s; }
+    if (d < bestD) {
+      bestD = d;
+      best = s;
+    }
   }
   return best;
 }

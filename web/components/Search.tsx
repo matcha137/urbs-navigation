@@ -39,14 +39,17 @@ export function Search({ station, mode }: { station: Station; mode?: ModeId }) {
   if (result.state === 'done') {
     const { res } = result;
     if (res.intent?.length) intent.push(`「${res.intent.join('・')}」で絞りました`);
-    if (res.degraded.vector) intent.push('意味での検索が使えないため、ことばの一致だけで探しています');
+    if (res.degraded.vector)
+      intent.push('意味での検索が使えないため、ことばの一致だけで探しています');
   }
 
   return (
     <details class="search">
       <summary>ことばで探す</summary>
       <form class="search-form" onSubmit={run}>
-        <label class="sr-only" for="search-q">探したいこと</label>
+        <label class="sr-only" for="search-q">
+          探したいこと
+        </label>
         <input
           id="search-q"
           name="q"
@@ -58,26 +61,31 @@ export function Search({ station, mode }: { station: Station; mode?: ModeId }) {
           value={q}
           onInput={(e) => setQ((e.currentTarget as HTMLInputElement).value)}
         />
-        <button type="submit" class="btn-small">探す</button>
+        <button type="submit" class="btn-small">
+          探す
+        </button>
       </form>
       {intent.length > 0 && <p class="search-intent">{intent.join(' / ')}</p>}
       <ul class="search-results">
         {result.state === 'error' && <li>検索できませんでした（{result.message}）。</li>}
-        {result.state === 'done' && result.res.places.length === 0 && <li>見つかりませんでした。</li>}
-        {result.state === 'done' && result.res.places.map((p) => {
-          const parts: string[] = [];
-          if (p.distanceM != null) parts.push(`${p.distanceM}m`);
-          if (p.access.accessibleToilet && p.access.toiletDistanceM != null)
-            parts.push(`車椅子対応トイレ ${p.access.toiletDistanceM}m`);
-          if (p.access.shelter) parts.push('屋内');
-          if (p.access.areaM2 != null) parts.push(areaLabel(p.access.areaM2));
-          return (
-            <li>
-              <strong>{p.name}</strong>
-              <span class="r-meta">{parts.join(' · ')}</span>
-            </li>
-          );
-        })}
+        {result.state === 'done' && result.res.places.length === 0 && (
+          <li>見つかりませんでした。</li>
+        )}
+        {result.state === 'done' &&
+          result.res.places.map((p) => {
+            const parts: string[] = [];
+            if (p.distanceM != null) parts.push(`${p.distanceM}m`);
+            if (p.access.accessibleToilet && p.access.toiletDistanceM != null)
+              parts.push(`車椅子対応トイレ ${p.access.toiletDistanceM}m`);
+            if (p.access.shelter) parts.push('屋内');
+            if (p.access.areaM2 != null) parts.push(areaLabel(p.access.areaM2));
+            return (
+              <li>
+                <strong>{p.name}</strong>
+                <span class="r-meta">{parts.join(' · ')}</span>
+              </li>
+            );
+          })}
       </ul>
     </details>
   );

@@ -22,9 +22,12 @@ export function accessRows(place: Place): [string, Cell][] {
   const rows: [string, Cell][] = [];
 
   if (a.accessibleToilet) {
-    rows.push(['トイレ', a.toiletDistanceM != null
-      ? { text: `車椅子対応トイレが${a.toiletDistanceM}m以内`, cls: 'yes' }
-      : { text: '車椅子対応トイレあり', cls: 'yes' }]);
+    rows.push([
+      'トイレ',
+      a.toiletDistanceM != null
+        ? { text: `車椅子対応トイレが${a.toiletDistanceM}m以内`, cls: 'yes' }
+        : { text: '車椅子対応トイレあり', cls: 'yes' },
+    ]);
   } else if (a.hasToilet) {
     rows.push(['トイレ', { text: '近くにある（車椅子対応かは不明）', cls: 'no' }]);
   } else {
@@ -32,19 +35,23 @@ export function accessRows(place: Place): [string, Cell][] {
   }
 
   rows.push(['段差', triText(a.stepFree, '段差解消あり', '段差あり')]);
-  rows.push(['屋内', a.shelter
-    ? { text: 'あり（雨をしのげる）', cls: 'yes' }
-    : { text: 'なし', cls: 'no' }]);
+  rows.push([
+    '屋内',
+    a.shelter ? { text: 'あり（雨をしのげる）', cls: 'yes' } : { text: 'なし', cls: 'no' },
+  ]);
 
   // 座れる場所は面積からの推定。**推定であることを画面から消さない**。
   // 面積が無い施設では推定そのものが成り立たないので、行ごと出さない
   // (「座れる場所: 広さの情報なし」は項目と答えが噛み合わない)
   if (a.seating.confidence === 'inferred') {
-    rows.push(['座れる場所', {
-      text: a.seating.label,
-      cls: 'no',
-      badge: a.areaM2 != null ? `面積${areaLabel(a.areaM2)}からの推定` : '推定',
-    }]);
+    rows.push([
+      '座れる場所',
+      {
+        text: a.seating.label,
+        cls: 'no',
+        badge: a.areaM2 != null ? `面積${areaLabel(a.areaM2)}からの推定` : '推定',
+      },
+    ]);
   }
 
   if (a.areaM2 != null) rows.push(['広さ', { text: areaLabel(a.areaM2), cls: 'no' }]);
@@ -61,10 +68,14 @@ export function accessRows(place: Place): [string, Cell][] {
  * **理由を書いて最初から選べなくする**。実測は config/station-modes.json。
  */
 const UNAVAILABLE_REASON: Record<'ward' | 'station', Partial<Record<ModeId, string>>> = {
-  ward:    { indoor: 'この区は屋内施設のデータがありません',
-             water:  'この区には水辺と分かる場所がありません' },
-  station: { indoor: 'この駅の近くに屋内の場所が見つかりません',
-             water:  'この駅の近くに水辺の場所が見つかりません' },
+  ward: {
+    indoor: 'この区は屋内施設のデータがありません',
+    water: 'この区には水辺と分かる場所がありません',
+  },
+  station: {
+    indoor: 'この駅の近くに屋内の場所が見つかりません',
+    water: 'この駅の近くに水辺の場所が見つかりません',
+  },
 };
 
 /**

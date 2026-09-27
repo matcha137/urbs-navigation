@@ -31,8 +31,10 @@
 export function triState(v) {
   const s = (v ?? '').trim();
   if (!s) return null;
-  if (['有', '可', 'あり', 'ある', '○', 'o', 'O', '1', 'true', 'YES', 'Yes'].includes(s)) return true;
-  if (['無', '不可', 'なし', 'ない', '×', 'x', 'X', '0', 'false', 'NO', 'No'].includes(s)) return false;
+  if (['有', '可', 'あり', 'ある', '○', 'o', 'O', '1', 'true', 'YES', 'Yes'].includes(s))
+    return true;
+  if (['無', '不可', 'なし', 'ない', '×', 'x', 'X', '0', 'false', 'NO', 'No'].includes(s))
+    return false;
   return null;
 }
 
@@ -48,6 +50,5 @@ export const str = (v) => {
 
 /** 緯度経度が東京都内に収まっているか。外れ値と空行をここで落とす。 */
 export function validCoord(lat, lng) {
-  return lat != null && lng != null &&
-         lat > 35.4 && lat < 36.0 && lng > 138.9 && lng < 140.0;
+  return lat != null && lng != null && lat > 35.4 && lat < 36.0 && lng > 138.9 && lng < 140.0;
 }

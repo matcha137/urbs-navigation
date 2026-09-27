@@ -19,7 +19,9 @@ export function Plan({ plan, emoji, busy, rest, notes, onAnother }: Props) {
     <section id="plan" class="plan" aria-live="polite" aria-busy={String(busy)}>
       <article class="course">
         <div class="course-head">
-          <span class="course-emoji" aria-hidden="true">{emoji}</span>
+          <span class="course-emoji" aria-hidden="true">
+            {emoji}
+          </span>
           <p class="course-kicker">{plan.headline}</p>
           <h2 class="course-title">{plan.title}</h2>
         </div>
@@ -27,26 +29,36 @@ export function Plan({ plan, emoji, busy, rest, notes, onAnother }: Props) {
         <div class="course-body">
           <div class="tiles">
             <div class="tile">
-              <p class="tile-label"><span aria-hidden="true">⏱</span> 所要時間</p>
+              <p class="tile-label">
+                <span aria-hidden="true">⏱</span> 所要時間
+              </p>
               <p class="tile-value">約{plan.estimatedMinutes}分</p>
             </div>
             <div class="tile">
-              <p class="tile-label"><span aria-hidden="true">📍</span> 距離</p>
+              <p class="tile-label">
+                <span aria-hidden="true">📍</span> 距離
+              </p>
               <p class="tile-value">{distLabel(plan.totalDistanceM)}</p>
             </div>
           </div>
 
           <div class="point">
-            <p class="point-title"><span aria-hidden="true">✨</span> おすすめポイント</p>
+            <p class="point-title">
+              <span aria-hidden="true">✨</span> おすすめポイント
+            </p>
             <p class="point-body">{plan.summary}</p>
           </div>
 
           <ul class="tags">
-            {plan.tags.map((t) => <li>{t}</li>)}
+            {plan.tags.map((t) => (
+              <li>{t}</li>
+            ))}
           </ul>
           <ol class="stops">
             {/* プランが替わったら開閉状態も捨てる */}
-            {plan.stops.map((s) => <Stop key={`${plan.id}:${s.order}`} stop={s} />)}
+            {plan.stops.map((s) => (
+              <Stop key={`${plan.id}:${s.order}`} stop={s} />
+            ))}
           </ol>
           <p class="plan-footer">{plan.footer}</p>
         </div>
@@ -60,7 +72,9 @@ export function Plan({ plan, emoji, busy, rest, notes, onAnother }: Props) {
 
       {notes.length > 0 && (
         <div class="notes">
-          {notes.map((t) => <p>{t}</p>)}
+          {notes.map((t) => (
+            <p>{t}</p>
+          ))}
         </div>
       )}
     </section>
@@ -100,7 +114,9 @@ function Stop({ stop }: { stop: PlanStop }) {
         </span>
         <span>
           <span class="stop-stay">{stop.stayLabel}</span>
-          <span class="stop-chevron" aria-hidden="true">{open ? '▴' : '▾'}</span>
+          <span class="stop-chevron" aria-hidden="true">
+            {open ? '▴' : '▾'}
+          </span>
         </span>
       </button>
       {open && (

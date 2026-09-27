@@ -29,7 +29,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
  * 江東区だけだった頃は区の矩形で切っていたが、5区に増えたので区単位では
  * もう意味をなさない。代わりに区ごとの重心からの距離で外れ値を警告する。
  */
-const BBOX = { minLat: 35.50, maxLat: 35.85, minLng: 139.55, maxLng: 139.95 };
+const BBOX = { minLat: 35.5, maxLat: 35.85, minLng: 139.55, maxLng: 139.95 };
 
 /** 区の重心からこれ以上離れていたら警告する。区の差し渡しはどこも10km未満。 */
 const WARD_OUTLIER_M = 8000;
@@ -37,11 +37,13 @@ const WARD_OUTLIER_M = 8000;
 /** デモ起点（清澄白河駅）。--limit を使うときの距離基準。 */
 const DEMO_ORIGIN = { lat: 35.6816, lng: 139.7975, label: '清澄白河駅' };
 
-const R = 6371000, rad = (d) => d * Math.PI / 180;
+const R = 6371000,
+  rad = (d) => (d * Math.PI) / 180;
 const dist = (a, b) => {
-  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
-  const x = Math.sin(dLat / 2) ** 2 +
-            Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  const dLat = rad(b.lat - a.lat),
+    dLng = rad(b.lng - a.lng);
+  const x =
+    Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(x));
 };
 
@@ -54,7 +56,7 @@ const before = places.length;
 
 // --- 1. bbox ---
 const outside = places.filter(
-  (p) => p.lat < BBOX.minLat || p.lat > BBOX.maxLat || p.lng < BBOX.minLng || p.lng > BBOX.maxLng
+  (p) => p.lat < BBOX.minLat || p.lat > BBOX.maxLat || p.lng < BBOX.minLng || p.lng > BBOX.maxLng,
 );
 places = places.filter((p) => !outside.includes(p));
 console.log(`bbox フィルタ: ${before} -> ${places.length} 件 (範囲外 ${outside.length})`);

@@ -28,7 +28,9 @@ export default [
     ward: '杉並区',
     source: {
       datasetName: '杉並区 都市公園・都立公園一覧',
-      publisher, license, retrievedAt,
+      publisher,
+      license,
+      retrievedAt,
       sourceUrl: page('t131156d2025000003'),
     },
   }),
@@ -39,7 +41,9 @@ export default [
     file: 'data/utf8/t131156d0000000206.csv',
     source: {
       datasetName: '杉並区 公衆トイレ一覧',
-      publisher, license, retrievedAt,
+      publisher,
+      license,
+      retrievedAt,
       sourceUrl: page('t131156d0000000206'),
     },
   }),
@@ -52,7 +56,9 @@ export default [
     ward: '杉並区',
     source: {
       datasetName: '杉並区 公共施設一覧',
-      publisher, license, retrievedAt,
+      publisher,
+      license,
+      retrievedAt,
       sourceUrl: page('t131156d0000000198'),
     },
   }),

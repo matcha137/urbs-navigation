@@ -63,14 +63,34 @@ export function conditionFromCode(code: number): WeatherCondition {
 
 /** 画面に出す短い日本語。summary の組み立てにだけ使う。 */
 const CODE_LABEL: Record<number, string> = {
-  0: '快晴', 1: '晴れ', 2: '晴れときどき曇り', 3: 'くもり',
-  45: '霧', 48: '霧',
-  51: '小雨', 53: '弱い雨', 55: '雨', 56: '凍える雨', 57: '凍える雨',
-  61: '小雨', 63: '雨', 65: '強い雨', 66: '凍える雨', 67: '凍える雨',
-  71: '小雪', 73: '雪', 75: '大雪', 77: '雪',
-  80: 'にわか雨', 81: 'にわか雨', 82: '激しいにわか雨',
-  85: 'にわか雪', 86: 'にわか雪',
-  95: '雷雨', 96: '雷雨', 99: '雷雨',
+  0: '快晴',
+  1: '晴れ',
+  2: '晴れときどき曇り',
+  3: 'くもり',
+  45: '霧',
+  48: '霧',
+  51: '小雨',
+  53: '弱い雨',
+  55: '雨',
+  56: '凍える雨',
+  57: '凍える雨',
+  61: '小雨',
+  63: '雨',
+  65: '強い雨',
+  66: '凍える雨',
+  67: '凍える雨',
+  71: '小雪',
+  73: '雪',
+  75: '大雪',
+  77: '雪',
+  80: 'にわか雨',
+  81: 'にわか雨',
+  82: '激しいにわか雨',
+  85: 'にわか雪',
+  86: 'にわか雪',
+  95: '雷雨',
+  96: '雷雨',
+  99: '雷雨',
 };
 
 const labelFor = (code: number) => CODE_LABEL[code] ?? 'くもり';
@@ -181,7 +201,7 @@ export async function getWeather(
   at: { lat: number; lng: number },
   // ctx は waitUntil だけ使う。Hono の ExecutionContext と workers-types の
   // ExecutionContext<unknown> が別物なので、必要な形だけを要求する
-  opts: { demo?: boolean; ctx?: { waitUntil(p: Promise<unknown>): void } } = {}
+  opts: { demo?: boolean; ctx?: { waitUntil(p: Promise<unknown>): void } } = {},
 ): Promise<WeatherResult> {
   if (opts.demo) return { weather: DEMO, degraded: false, source: 'demo' };
 

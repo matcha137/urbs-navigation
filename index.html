@@ -1,20 +1,27 @@
 <!doctype html>
 <html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TOKYO発進</title>
-<meta name="description" content="散歩のしかたと時間から、東京都の行き先を組み立てます。江東区・杉並区・台東区・目黒区・新宿区。東京都オープンデータを使っています。">
-<meta name="theme-color" content="#cdeef8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap">
-</head>
-<body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>TOKYO発進</title>
+    <meta
+      name="description"
+      content="散歩のしかたと時間から、東京都の行き先を組み立てます。江東区・杉並区・台東区・目黒区・新宿区。東京都オープンデータを使っています。"
+    />
+    <meta name="theme-color" content="#cdeef8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap"
+    />
+  </head>
+  <body>
+    <!-- 読み込み中に何も無い画面を出さない。描画が始まると web/main.tsx が置き換える -->
+    <div id="root">
+      <div class="boot"><span class="boot-dot"></span>読み込んでいます</div>
+    </div>
 
-<!-- 読み込み中に何も無い画面を出さない。描画が始まると web/main.tsx が置き換える -->
-<div id="root"><div class="boot"><span class="boot-dot"></span>読み込んでいます</div></div>
-
-<script type="module" src="/web/main.tsx"></script>
-</body>
+    <script type="module" src="/web/main.tsx"></script>
+  </body>
 </html>

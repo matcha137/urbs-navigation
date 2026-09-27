@@ -18,8 +18,15 @@
  */
 import type { ModeId, Place, Plan, WeatherSnapshot } from '../../shared/types';
 import {
-  BANNED_WORDS, MODE_TONE, LIMITS, MIN_LENGTH, PROMPT_VERSION, REASON_MODEL,
-  REASON_TIMEOUT_MS, STEP_FREE_CLAIM_RE, SYSTEM_PROMPT,
+  BANNED_WORDS,
+  MODE_TONE,
+  LIMITS,
+  MIN_LENGTH,
+  PROMPT_VERSION,
+  REASON_MODEL,
+  REASON_TIMEOUT_MS,
+  STEP_FREE_CLAIM_RE,
+  SYSTEM_PROMPT,
 } from '../../config/prompts';
 
 /** 生成文のキャッシュ保持時間。事実表が同じなら文も同じでよい。 */
@@ -29,8 +36,7 @@ const CACHE_TTL_S = 86400;
 // 事実表
 // =====================================================================
 
-const tri = (v: boolean | null, yes: string, no: string) =>
-  v === null ? '不明' : v ? yes : no;
+const tri = (v: boolean | null, yes: string, no: string) => (v === null ? '不明' : v ? yes : no);
 
 /**
  * モデルに渡す事実表を組む。
@@ -42,7 +48,7 @@ export function buildFactSheet(
   modeLabel: string,
   weather: WeatherSnapshot,
   plan: Plan,
-  places: Place[]
+  places: Place[],
 ): string {
   const lines: string[] = [
     `# 相手の希望`,
@@ -68,7 +74,7 @@ export function buildFactSheet(
           ? `車椅子対応トイレ: ある`
           : a.hasToilet
             ? `トイレ: 近くにある（車椅子対応かは不明）`
-            : `トイレ: 情報なし`
+            : `トイレ: 情報なし`,
     );
     lines.push(`屋内: ${a.shelter ? 'あり（雨をしのげる）' : 'なし'}`);
     lines.push(`段差: ${tri(a.stepFree, '段差解消あり', '段差あり')}`);
@@ -80,7 +86,7 @@ export function buildFactSheet(
 
 /** 事実表に出てくる数字。生成文にこれ以外の数字が出たら不採用にする。 */
 function allowedNumbers(factSheet: string, stopCount: number): Set<string> {
-  const set = new Set<string>((factSheet.match(/\d+/g) ?? []));
+  const set = new Set<string>(factSheet.match(/\d+/g) ?? []);
   set.add(String(stopCount));
   return set;
 }
@@ -134,13 +140,17 @@ export function validate(raw: unknown, ctx: ValidateContext): { ok: string } | {
   if (typeof raw !== 'string') return { reason: `${ctx.field}: 文字列でない` };
 
   // 前後の引用符と鉤括弧を落とす。モデルが付けてくることがある
-  const text = normalize(raw).replace(/^["'「『]|["'」』]$/g, '').trim();
+  const text = normalize(raw)
+    .replace(/^["'「『]|["'」』]$/g, '')
+    .trim();
 
   if (!text) return { reason: `${ctx.field}: 空` };
   if (/[\r\n]/.test(text)) return { reason: `${ctx.field}: 改行が入っている` };
-  if (text.length > LIMITS[ctx.field]) return { reason: `${ctx.field}: ${text.length}字 (上限${LIMITS[ctx.field]})` };
+  if (text.length > LIMITS[ctx.field])
+    return { reason: `${ctx.field}: ${text.length}字 (上限${LIMITS[ctx.field]})` };
   // 短すぎる文はルールベースより情報が少ない。採用する意味がない
-  if (text.length < MIN_LENGTH[ctx.field]) return { reason: `${ctx.field}: ${text.length}字と短すぎる (下限${MIN_LENGTH[ctx.field]})` };
+  if (text.length < MIN_LENGTH[ctx.field])
+    return { reason: `${ctx.field}: ${text.length}字と短すぎる (下限${MIN_LENGTH[ctx.field]})` };
 
   // データが無い語
   const banned = BANNED_WORDS.find((w) => text.includes(w));
@@ -231,18 +241,21 @@ function fromText(text: string): ModelOutput | null {
 async function callModel(ai: Ai, factSheet: string, mode: ModeId): Promise<ModelOutput | null> {
   const user = `${MODE_TONE[mode] ?? ''}\n\n# 事実\n${factSheet}`;
 
-  const run = ai.run(REASON_MODEL as never, {
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: user },
-    ],
-    max_tokens: 400,
-    temperature: 0.4,
-  } as never);
+  const run = ai.run(
+    REASON_MODEL as never,
+    {
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: user },
+      ],
+      max_tokens: 400,
+      temperature: 0.4,
+    } as never,
+  );
 
   // デモで固まらせない。ai.run は AbortSignal を受けないので race で切る
   const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('reason timeout')), REASON_TIMEOUT_MS)
+    setTimeout(() => reject(new Error('reason timeout')), REASON_TIMEOUT_MS),
   );
 
   return parseJson(await Promise.race([run, timeout]));
@@ -263,7 +276,10 @@ export interface ReasonResult {
 
 const sha = async (s: string) => {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-  return [...new Uint8Array(buf)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return [...new Uint8Array(buf)]
+    .slice(0, 16)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 };
 
 /**
@@ -279,7 +295,7 @@ export async function applyReasons(
   weather: WeatherSnapshot,
   plan: Plan,
   places: Place[],
-  opts: { simulateOutage?: boolean; ctx?: { waitUntil(p: Promise<unknown>): void } } = {}
+  opts: { simulateOutage?: boolean; ctx?: { waitUntil(p: Promise<unknown>): void } } = {},
 ): Promise<ReasonResult> {
   const rejected: string[] = [];
   const factSheet = buildFactSheet(modeLabel, weather, plan, places);
@@ -302,7 +318,8 @@ export async function applyReasons(
       source = 'ai';
       if (out) {
         const write = env.CACHE?.put(key, JSON.stringify(out), { expirationTtl: CACHE_TTL_S });
-        if (write) opts.ctx ? opts.ctx.waitUntil(write) : await write.catch(() => {});
+        if (write && opts.ctx) opts.ctx.waitUntil(write);
+        else if (write) await write.catch(() => {});
       }
     }
   } catch (e) {
@@ -320,10 +337,16 @@ export async function applyReasons(
   const planClaims = planClaimsOf(places);
 
   const headline = validate(out.headline, { field: 'headline', numbers, planClaims });
-  if ('ok' in headline) { plan.headline = headline.ok; used++; } else rejected.push(headline.reason);
+  if ('ok' in headline) {
+    plan.headline = headline.ok;
+    used++;
+  } else rejected.push(headline.reason);
 
   const title = validate(out.title, { field: 'title', numbers, planClaims });
-  if ('ok' in title) { plan.title = title.ok; used++; } else rejected.push(title.reason);
+  if ('ok' in title) {
+    plan.title = title.ok;
+    used++;
+  } else rejected.push(title.reason);
 
   const notes = Array.isArray(out.notes) ? out.notes : [];
   if (notes.length !== places.length) {
@@ -331,7 +354,10 @@ export async function applyReasons(
   } else {
     plan.stops.forEach((stop, i) => {
       const r = validate(notes[i], { field: 'note', numbers, place: places[i] });
-      if ('ok' in r) { stop.note = r.ok; used++; } else rejected.push(r.reason);
+      if ('ok' in r) {
+        stop.note = r.ok;
+        used++;
+      } else rejected.push(r.reason);
     });
   }
 

@@ -8,9 +8,20 @@
  * スコアリングの重みは config/modes.ts の MODES[].weights が唯一の正。
  * ここに数値を増やさない。
  */
-import type { ModeId, Place, Plan, PlanStop, PlaceSource, WeatherSnapshot } from '../../shared/types';
+import type {
+  ModeId,
+  Place,
+  Plan,
+  PlanStop,
+  PlaceSource,
+  WeatherSnapshot,
+} from '../../shared/types';
 import { effectiveLimits, type MinutesOption } from '../../config/modes';
-import { ODD_AS_DESTINATION, ODD_PENALTY, REPEAT_CATEGORY_PENALTY } from '../../config/destinations';
+import {
+  ODD_AS_DESTINATION,
+  ODD_PENALTY,
+  REPEAT_CATEGORY_PENALTY,
+} from '../../config/destinations';
 import { haversineM } from './sql';
 
 type Limits = ReturnType<typeof effectiveLimits>;
@@ -109,7 +120,10 @@ function pickStops(scored: Scored[], limits: Limits, origin: Origin, seedIndex: 
       if (leg < MIN_SEPARATION_M) continue; // 同じ一角を2回案内しない
       if (routeM + leg > limits.maxRouteM) continue;
       const s = c.score * (used.has(c.place.category) ? REPEAT_CATEGORY_PENALTY : 1);
-      if (s > bestScore) { bestScore = s; best = c; }
+      if (s > bestScore) {
+        bestScore = s;
+        best = c;
+      }
     }
 
     if (!best) break;
@@ -135,8 +149,7 @@ const HEADLINE: Record<ModeId, string> = {
  * 「江東区立◯◯公園」→「◯◯公園」。見出しが区名で埋まるのを防ぐ。
  * 区名は決め打ちする。汎用の正規表現だと「三之輪橋区民広場」の先頭まで削れる。
  */
-const shortName = (name: string) =>
-  name.replace(/^(東京都)?(江東|杉並|台東|目黒|新宿)区立?/, '');
+const shortName = (name: string) => name.replace(/^(東京都)?(江東|杉並|台東|目黒|新宿)区立?/, '');
 
 const distLabel = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`);
 
@@ -153,7 +166,8 @@ function noteFor(p: Place): string {
   if (a.shelter) bits.push('屋内で雨をしのげる');
   if (a.stepFree === true) bits.push('段差解消の手段があると登録');
   if (a.seating.tier >= 2) bits.push(a.seating.label);
-  else if (a.areaM2 != null) bits.push(`${Math.round(a.areaM2).toLocaleString('en-US')}㎡の${a.seating.label}`);
+  else if (a.areaM2 != null)
+    bits.push(`${Math.round(a.areaM2).toLocaleString('en-US')}㎡の${a.seating.label}`);
 
   // TODO(T-70): ここを Workers AI に置き換える。属性の羅列から一文にする。
   return bits.length ? bits.join('・') : '近所にある場所';
@@ -196,7 +210,8 @@ function tagsFor(stops: Scored[], totalM: number): string[] {
   if (stops.some((s) => s.place.access.stepFree === true)) tags.push('段差解消あり（施設）');
   if (stops.some((s) => s.place.access.shelter)) tags.push('屋内で休める');
   const best = Math.max(...stops.map((s) => s.place.access.seating.tier));
-  if (best >= 2) tags.push(stops.find((s) => s.place.access.seating.tier === best)!.place.access.seating.label);
+  if (best >= 2)
+    tags.push(stops.find((s) => s.place.access.seating.tier === best)!.place.access.seating.label);
   return tags;
 }
 
@@ -216,7 +231,7 @@ function buildPlan(
   limits: Limits,
   origin: Origin,
   seedIndex: number,
-  planIndex: number
+  planIndex: number,
 ): Plan | null {
   const chosen = pickStops(scored, limits, origin, seedIndex);
   if (!chosen.length) return null;
@@ -293,7 +308,7 @@ export function buildPlans(
   minutes: MinutesOption,
   places: Place[],
   weather: WeatherSnapshot,
-  origin: Origin
+  origin: Origin,
 ): BuildResult {
   const limits = effectiveLimits(mode, minutes, weather);
   const scored = scoreCandidates(places, limits, origin);

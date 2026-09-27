@@ -5,7 +5,14 @@
  */
 import { useEffect, useRef, useState } from 'hono/jsx/dom';
 import type { Minutes, Station } from '../shared/types';
-import { ApiError, getModes, getStations, postSuggest, type ModeItem, type SuggestBody } from './api';
+import {
+  ApiError,
+  getModes,
+  getStations,
+  postSuggest,
+  type ModeItem,
+  type SuggestBody,
+} from './api';
 import { DEGRADE, DEMO, getPosition, nearestStation } from './env';
 import { Ask } from './components/Ask';
 import { Plan } from './components/Plan';
@@ -51,9 +58,13 @@ export function App() {
   if (boot.state !== 'ready') {
     return (
       <div class="boot">
-        {boot.state === 'loading'
-          ? <><span class="boot-dot"></span>読み込んでいます</>
-          : 'サーバに接続できませんでした。時間をおいて開き直してください。'}
+        {boot.state === 'loading' ? (
+          <>
+            <span class="boot-dot"></span>読み込んでいます
+          </>
+        ) : (
+          'サーバに接続できませんでした。時間をおいて開き直してください。'
+        )}
       </div>
     );
   }
@@ -120,7 +131,7 @@ function Main({ modes, stations, wards, initialStation }: MainProps) {
       setEmpty(
         e instanceof ApiError && e.code === 'no_candidates'
           ? `「${m.label}」に合う場所が、${at.station.name}の周りには見つかりませんでした。散歩時間を長くするか、別のしかたを選んでください。`
-          : `うまく取得できませんでした（${e instanceof Error ? e.message : String(e)}）。`
+          : `うまく取得できませんでした（${e instanceof Error ? e.message : String(e)}）。`,
       );
     } finally {
       if (seq === requestSeq.current) setBusy(false);
@@ -186,8 +197,12 @@ function Main({ modes, stations, wards, initialStation }: MainProps) {
       {/* 答えたあとに出る戻り導線 */}
       {answered && (
         <div class="answered">
-          <button type="button" class="pill" onClick={backToAsk}>← 条件を選び直す</button>
-          <p class="answered-line">{station.name}から {minutes}分 · {mode?.label}</p>
+          <button type="button" class="pill" onClick={backToAsk}>
+            ← 条件を選び直す
+          </button>
+          <p class="answered-line">
+            {station.name}から {minutes}分 · {mode?.label}
+          </p>
         </div>
       )}
 
@@ -208,7 +223,11 @@ function Main({ modes, stations, wards, initialStation }: MainProps) {
       {answered && empty !== null && (
         <section class="card empty">
           <p>{empty}</p>
-          <button type="button" class="cta" onClick={() => mode && choose(mode, { station, minutes })}>
+          <button
+            type="button"
+            class="cta"
+            onClick={() => mode && choose(mode, { station, minutes })}
+          >
             もう一度ためす
           </button>
         </section>
@@ -227,12 +246,15 @@ function Main({ modes, stations, wards, initialStation }: MainProps) {
  */
 function degradedNotes(res: SuggestBody, mode: ModeItem | null): string[] {
   const notes: string[] = [];
-  if (res.degraded.weather) notes.push('天気を取得できませんでした。天気による距離の調整はしていません。');
+  if (res.degraded.weather)
+    notes.push('天気を取得できませんでした。天気による距離の調整はしていません。');
   if (res.degraded.ai) notes.push('説明文の生成が使えないため、定型の文で表示しています。');
   if (res.weather?.condition === 'rain' || res.weather?.condition === 'snow')
     notes.push('雨のぶん、距離を短くして屋根のある場所を優先しました。');
   // 水辺は名前からの判定。断定しない (config/destinations.ts)
   if (mode?.id === 'water')
-    notes.push('水辺かどうかは場所の名前から判断しています。川に面していない場所が混じることがあります。');
+    notes.push(
+      '水辺かどうかは場所の名前から判断しています。川に面していない場所が混じることがあります。',
+    );
   return notes;
 }

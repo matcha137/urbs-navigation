@@ -21,13 +21,18 @@ export const weather = new Hono<{ Bindings: Bindings }>().get('/', async (c) => 
   let origin = DEFAULT_ORIGIN;
   if (raw) {
     const [a, b] = raw.split(',');
-    const lat = Number(a), lng = Number(b);
+    const lat = Number(a),
+      lng = Number(b);
     if (!Number.isFinite(lat) || !Number.isFinite(lng))
       return c.json({ error: 'bad_request', message: 'near は "lat,lng" 形式' }, 400);
     origin = { lat, lng };
   }
 
-  const { weather: snapshot, degraded, source } = await getWeather(c.env, origin, {
+  const {
+    weather: snapshot,
+    degraded,
+    source,
+  } = await getWeather(c.env, origin, {
     demo: c.req.query('demo') === 'true',
     ctx: c.executionCtx,
   });
@@ -38,19 +43,25 @@ export const weather = new Hono<{ Bindings: Bindings }>().get('/', async (c) => 
   const adjust = Object.fromEntries(
     MODE_LIST.map((m) => {
       const eff = effectiveLimits(m.id, 60, snapshot);
-      return [m.id, {
-        label: MODES[m.id].label,
-        shelterWeight: Number(eff.shelterWeight.toFixed(2)),
-        baseShelterWeight: MODES[m.id].weights.shelter,
-        note: eff.weatherNote,
-        byMinutes: Object.fromEntries(
-          MINUTES_OPTIONS.map((min) => [min, {
-            maxDistanceM: effectiveLimits(m.id, min, snapshot).maxDistanceM,
-            baseMaxDistanceM: effectiveLimits(m.id, min, CALM).maxDistanceM,
-          }])
-        ),
-      }];
-    })
+      return [
+        m.id,
+        {
+          label: MODES[m.id].label,
+          shelterWeight: Number(eff.shelterWeight.toFixed(2)),
+          baseShelterWeight: MODES[m.id].weights.shelter,
+          note: eff.weatherNote,
+          byMinutes: Object.fromEntries(
+            MINUTES_OPTIONS.map((min) => [
+              min,
+              {
+                maxDistanceM: effectiveLimits(m.id, min, snapshot).maxDistanceM,
+                baseMaxDistanceM: effectiveLimits(m.id, min, CALM).maxDistanceM,
+              },
+            ]),
+          ),
+        },
+      ];
+    }),
   );
 
   return c.json({ weather: snapshot, source, degraded, origin, adjust });

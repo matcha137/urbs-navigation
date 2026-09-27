@@ -28,13 +28,18 @@ export function getPosition(): Promise<LatLng | null> {
 
   return new Promise((resolve) => {
     let done = false;
-    const finish = (v: LatLng | null) => { if (!done) { done = true; resolve(v); } };
+    const finish = (v: LatLng | null) => {
+      if (!done) {
+        done = true;
+        resolve(v);
+      }
+    };
 
     setTimeout(() => finish(null), GEO_TIMEOUT_MS);
     navigator.geolocation.getCurrentPosition(
       (pos) => finish({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => finish(null),
-      { timeout: GEO_TIMEOUT_MS, maximumAge: 300000 }
+      { timeout: GEO_TIMEOUT_MS, maximumAge: 300000 },
     );
   });
 }
@@ -50,7 +55,10 @@ export function nearestStation(stations: Station[], pos: LatLng | null): Station
   let bestD = Infinity;
   for (const s of stations) {
     const d = (s.lat - pos.lat) ** 2 + (s.lng - pos.lng) ** 2;
-    if (d < bestD) { bestD = d; best = s; }
+    if (d < bestD) {
+      bestD = d;
+      best = s;
+    }
   }
   return best;
 }

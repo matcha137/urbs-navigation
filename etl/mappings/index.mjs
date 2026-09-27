@@ -20,7 +20,9 @@ import shinjuku from './shinjuku.mjs';
  * 採否の根拠 (23区を全部当たった実測) は docs/datasets.md。
  */
 export const MAPPINGS = [
-  kotoParks, kotoToilets, kotoFacilities,
+  kotoParks,
+  kotoToilets,
+  kotoFacilities,
   ...suginami,
   ...taito,
   ...meguro,

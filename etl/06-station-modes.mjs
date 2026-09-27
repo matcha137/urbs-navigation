@@ -50,18 +50,20 @@ const MIN_COUNT = 3;
 
 // ---------- 判定 ----------
 
-const R = 6371000, rad = (d) => d * Math.PI / 180;
+const R = 6371000,
+  rad = (d) => (d * Math.PI) / 180;
 const dist = (a, b) => {
-  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
-  const x = Math.sin(dLat / 2) ** 2 +
-            Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  const dLat = rad(b.lat - a.lat),
+    dLng = rad(b.lng - a.lng);
+  const x =
+    Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(x));
 };
 
 const isDestination = (p) =>
   !NOT_A_DESTINATION.some((k) => p.name.includes(k)) &&
   (!NOT_A_DESTINATION_PREFIX.some((k) => p.name.startsWith(k)) ||
-   NOT_A_DESTINATION_PREFIX_KEEP.some((k) => p.name.startsWith(k)));
+    NOT_A_DESTINATION_PREFIX_KEEP.some((k) => p.name.startsWith(k)));
 
 const isWaterside = (p) => {
   if (p.category === 'riverside') return true;
@@ -72,7 +74,7 @@ const isWaterside = (p) => {
 /** src/lib/places.ts の modeConditions() と同じ条件。三値の扱いに注意。 */
 const MODE_FILTERS = {
   stroll: (p) => p.access.stepFree !== false && p.access.slope !== true,
-  water:  (p) => isWaterside(p),
+  water: (p) => isWaterside(p),
   active: () => true,
   indoor: (p) =>
     p.access.accessibleToilet === true &&
@@ -96,32 +98,43 @@ for (const s of stationCfg.stations) {
     if (counts[id] >= MIN_COUNT) modes.push(id);
   }
   out[s.id] = { ward: s.ward, name: s.name, counts, modes };
-  rows.push([s.ward, s.name, near.length, counts, modes]);
+  rows.push([s.ward, s.name, counts, modes]);
 }
 
 writeFileSync(
   'config/station-modes.json',
-  JSON.stringify({
-    _comment:
-      'etl/06-station-modes.mjs が生成する。手で書き換えないこと。' +
-      `半径${RADIUS_M}m (90分の上限) 以内に ${MIN_COUNT} 件以上あるモードだけを modes に載せている。` +
-      'counts はその実測値。行き先にしない施設 (config/destinations.ts) は除いてある。',
-    generatedAt: new Date().toISOString(),
-    radiusM: RADIUS_M,
-    minCount: MIN_COUNT,
-    stations: out,
-  }, null, 2) + '\n'
+  JSON.stringify(
+    {
+      _comment:
+        'etl/06-station-modes.mjs が生成する。手で書き換えないこと。' +
+        `半径${RADIUS_M}m (90分の上限) 以内に ${MIN_COUNT} 件以上あるモードだけを modes に載せている。` +
+        'counts はその実測値。行き先にしない施設 (config/destinations.ts) は除いてある。',
+      generatedAt: new Date().toISOString(),
+      radiusM: RADIUS_M,
+      minCount: MIN_COUNT,
+      stations: out,
+    },
+    null,
+    2,
+  ) + '\n',
 );
 
 console.log('駅'.padEnd(12) + 'のんびり 水辺 しっかり 屋内   選べるもの');
 let lastWard = '';
-for (const [ward, name, total, c, modes] of rows) {
-  if (ward !== lastWard) { console.log(`--- ${ward}`); lastWard = ward; }
+for (const [ward, name, c, modes] of rows) {
+  if (ward !== lastWard) {
+    console.log(`--- ${ward}`);
+    lastWard = ward;
+  }
   console.log(
-    '  ' + name.padEnd(10) +
-    String(c.stroll).padStart(6) + String(c.water).padStart(5) +
-    String(c.active).padStart(7) + String(c.indoor).padStart(6) +
-    '   ' + modes.join(',')
+    '  ' +
+      name.padEnd(10) +
+      String(c.stroll).padStart(6) +
+      String(c.water).padStart(5) +
+      String(c.active).padStart(7) +
+      String(c.indoor).padStart(6) +
+      '   ' +
+      modes.join(','),
   );
 }
 console.log(`\n-> config/station-modes.json (${rows.length}駅)`);
