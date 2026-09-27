@@ -20,8 +20,18 @@ const EXCLUDE_MAJOR = new Set(['教育', '防災', '住宅', '子育て', '保�
 
 /** 小区分に含まれていたら落とすキーワード。 */
 const EXCLUDE_KEYWORDS = [
-  'きっずクラブ', '小学校', '中学校', '幼稚園', '保育', '防災倉庫',
-  '住宅', '駐車場', '駐輪', '倉庫', 'water', '給水',
+  'きっずクラブ',
+  '小学校',
+  '中学校',
+  '幼稚園',
+  '保育',
+  '防災倉庫',
+  '住宅',
+  '駐車場',
+  '駐輪',
+  '倉庫',
+  'water',
+  '給水',
 ];
 
 /**
@@ -52,7 +62,8 @@ export default {
   },
 
   map(row, i) {
-    const lat = num(row['緯度']), lng = num(row['経度']);
+    const lat = num(row['緯度']),
+      lng = num(row['経度']);
     const name = str(row['列1']); // ← 元データの列名がこうなっている
     if (!name || !validCoord(lat, lng)) return null;
 
@@ -61,20 +72,20 @@ export default {
     if (!major || EXCLUDE_MAJOR.has(major)) return null;
     if (EXCLUDE_KEYWORDS.some((k) => minor.includes(k) || name.includes(k))) return null;
 
-    const category = CATEGORY_RULES.find(([re]) => re.test(minor) || re.test(name))?.[1] ?? 'facility';
+    const category =
+      CATEGORY_RULES.find(([re]) => re.test(minor) || re.test(name))?.[1] ?? 'facility';
     const isOutdoor = category === 'park' || category === 'garden' || category === 'riverside';
 
     // 宣言値。空欄は null のまま (未記入 ≠ 非対応)
     const wheelchairOk = triState(row['車椅子可']);
-    const slopeOrLift  = triState(row['スロープ、エレベータ、エスカレータ']);
-    const bfToilet     = triState(row['バリアフリートイレ']);
-    const ostomate     = triState(row['オストメイト対応トイレ']);
+    const slopeOrLift = triState(row['スロープ、エレベータ、エスカレータ']);
+    const bfToilet = triState(row['バリアフリートイレ']);
+    const ostomate = triState(row['オストメイト対応トイレ']);
 
     // 段差解消手段が「有」または車椅子可なら step_free = true、
     // 「無」と明記されている場合のみ false。それ以外は不明のまま。
     const stepFree =
-      slopeOrLift === true || wheelchairOk === true ? true :
-      slopeOrLift === false ? false : null;
+      slopeOrLift === true || wheelchairOk === true ? true : slopeOrLift === false ? false : null;
 
     const declared = [wheelchairOk, slopeOrLift, bfToilet, ostomate].some((v) => v !== null);
 
@@ -83,7 +94,8 @@ export default {
       id: `facility:koto:${str(row['ID']) || `row${i}`}`,
       name,
       nameKana: str(row['名称_カナ']),
-      lat, lng,
+      lat,
+      lng,
       ward: '江東区',
       category,
       address: str(row['所在地_連結表記']),
@@ -97,7 +109,7 @@ export default {
       access: {
         stepFree,
         slope: null,
-        shelter: !isOutdoor,          // 屋内なら雨をしのげる
+        shelter: !isOutdoor, // 屋内なら雨をしのげる
         hasToilet: bfToilet !== null, // トイレ欄に記載があること自体がトイレの存在を示す
         accessibleToilet: bfToilet === true,
         ostomate: ostomate === true,

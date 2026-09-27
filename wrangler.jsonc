@@ -14,29 +14,25 @@
     // 未マッチのパスは Worker に流れ、/api/* がそこで処理される。
     // "single-page-application" にするなら run_worker_first: ["/api/*"] も要る。
     // 無いと /api/* の 404 まで index.html が返ってしまう。
-    "not_found_handling": "none"
+    "not_found_handling": "none",
   },
   // T-34 天気キャッシュ。Open-Meteo の応答を 30分ぶん保持する。
   // 落ちても degraded.weather=true で動くので、必須バインディングではない。
-  "kv_namespaces": [
-    { "binding": "CACHE", "id": "42d6d220970b44c0932ad263d1d3667f" }
-  ],
+  "kv_namespaces": [{ "binding": "CACHE", "id": "42d6d220970b44c0932ad263d1d3667f" }],
 
   // T-37 埋め込み生成 / T-71 理由生成
   "ai": { "binding": "AI" },
 
   // T-36 自然文検索の索引。bge-m3 に合わせて 1024次元 / cosine で作成済み。
   // 中身は D1 から再生成できる (POST /api/admin/reindex)。
-  "vectorize": [
-    { "binding": "VECTORIZE", "index_name": "urbs-places" }
-  ],
+  "vectorize": [{ "binding": "VECTORIZE", "index_name": "urbs-places" }],
 
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "tokyo_outings",
-      "database_id": "f6d47cd4-3269-46b4-bdb4-fb757d276255"
-    }
+      "database_id": "f6d47cd4-3269-46b4-bdb4-fb757d276255",
+    },
   ],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
 }

@@ -55,7 +55,7 @@ for (const f of files) {
   if (!check.ok) failed++;
   console.log(
     `${mark} ${f.padEnd(26)} ${encoding.padEnd(18)} ${String(lines).padStart(5)}行` +
-    (check.ok ? '' : `  ← 置換文字${check.replacementChars}個 / 日本語検出=${check.hasJapanese}`)
+      (check.ok ? '' : `  ← 置換文字${check.replacementChars}個 / 日本語検出=${check.hasJapanese}`),
   );
 }
 

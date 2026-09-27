@@ -38,11 +38,15 @@ function pick(row, re) {
  */
 function meguroParks({ key, slug, label, file, kind }) {
   return {
-    key, role: 'place', label, file,
+    key,
+    role: 'place',
+    label,
+    file,
     source: { datasetName: label, publisher, license, retrievedAt, sourceUrl: page(slug) },
 
     map(row, i) {
-      const lat = num(pick(row, /^緯度$/)), lng = num(pick(row, /^経度$/));
+      const lat = num(pick(row, /^緯度$/)),
+        lng = num(pick(row, /^経度$/));
       const name = str(pick(row, /^名称$/));
       if (!name || !validCoord(lat, lng)) return null;
 
@@ -52,19 +56,18 @@ function meguroParks({ key, slug, label, file, kind }) {
       // 「有」と書かれていれば宣言値。空欄は不明であって「無い」ではない
       const anyoneToilet = triState(pick(row, /^だれでもトイレ$/));
       const simpleToilet = triState(pick(row, /^簡易型/));
-      const unitToilet   = triState(pick(row, /^ユニットトイレ$/));
+      const unitToilet = triState(pick(row, /^ユニットトイレ$/));
       const declaredToilet = [anyoneToilet, simpleToilet, unitToilet].some((v) => v === true);
 
       // 施設1〜5 は古民家・竹林など。検索本文の手がかりになるので拾う
-      const features = [1, 2, 3, 4, 5]
-        .map((n) => str(row[`施設${n}`]))
-        .filter(Boolean);
+      const features = [1, 2, 3, 4, 5].map((n) => str(row[`施設${n}`])).filter(Boolean);
 
       return {
         id: `park:meguro:${key.replace('meguro-', '')}-${str(pick(row, /^No\.$/)) || `row${i}`}`,
         name,
         nameKana: null,
-        lat, lng,
+        lat,
+        lng,
         ward: '目黒区',
         category: 'park',
         address: str(pick(row, /^所在地$/)),
@@ -91,9 +94,27 @@ function meguroParks({ key, slug, label, file, kind }) {
 }
 
 const parks = [
-  { key: 'meguro-parks',    slug: 't131105d0000000200', label: '目黒区 区立公園', file: 'data/utf8/t131105d0000000200.csv', kind: '区立公園' },
-  { key: 'meguro-children', slug: 't131105d0000000223', label: '目黒区 児童遊園', file: 'data/utf8/t131105d0000000223.csv', kind: '児童遊園' },
-  { key: 'meguro-metro',    slug: 't131105d0000000222', label: '目黒区 都立公園', file: 'data/utf8/t131105d0000000222.csv', kind: '都立公園' },
+  {
+    key: 'meguro-parks',
+    slug: 't131105d0000000200',
+    label: '目黒区 区立公園',
+    file: 'data/utf8/t131105d0000000200.csv',
+    kind: '区立公園',
+  },
+  {
+    key: 'meguro-children',
+    slug: 't131105d0000000223',
+    label: '目黒区 児童遊園',
+    file: 'data/utf8/t131105d0000000223.csv',
+    kind: '児童遊園',
+  },
+  {
+    key: 'meguro-metro',
+    slug: 't131105d0000000222',
+    label: '目黒区 都立公園',
+    file: 'data/utf8/t131105d0000000222.csv',
+    kind: '都立公園',
+  },
 ].map(meguroParks);
 
 export default [
@@ -104,7 +125,9 @@ export default [
     file: 'data/utf8/t131105d0000000167.csv',
     source: {
       datasetName: '目黒区 公衆トイレ',
-      publisher, license, retrievedAt,
+      publisher,
+      license,
+      retrievedAt,
       sourceUrl: page('t131105d0000000167'),
     },
   }),

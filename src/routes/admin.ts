@@ -42,9 +42,11 @@ export const admin = new Hono<{ Bindings: Bindings }>();
 admin.use('*', async (c, next) => {
   const expected = c.env.ADMIN_TOKEN;
   if (!expected)
-    return c.json({ error: 'unavailable', message: 'ADMIN_TOKEN が未設定。wrangler secret put ADMIN_TOKEN' }, 503);
-  if (c.req.header('x-admin-token') !== expected)
-    return c.json({ error: 'forbidden' }, 403);
+    return c.json(
+      { error: 'unavailable', message: 'ADMIN_TOKEN が未設定。wrangler secret put ADMIN_TOKEN' },
+      503,
+    );
+  if (c.req.header('x-admin-token') !== expected) return c.json({ error: 'forbidden' }, 403);
   await next();
 });
 
@@ -52,11 +54,16 @@ admin.post('/reindex', async (c) => {
   const offset = Math.max(0, Number(c.req.query('offset')) || 0);
   const limit = Math.min(300, Math.max(1, Number(c.req.query('limit')) || DEFAULT_LIMIT));
 
-  const { results } = await c.env.DB
-    .prepare(`SELECT id, name, category, description, area_m2
+  const { results } = await c.env.DB.prepare(`SELECT id, name, category, description, area_m2
               FROM v_places ORDER BY id LIMIT ?1 OFFSET ?2`)
     .bind(limit, offset)
-    .all<{ id: string; name: string; category: string; description: string; area_m2: number | null }>();
+    .all<{
+      id: string;
+      name: string;
+      category: string;
+      description: string;
+      area_m2: number | null;
+    }>();
 
   const rows = results ?? [];
   if (!rows.length) return c.json({ processed: 0, offset, next: null, done: true });
@@ -65,13 +72,18 @@ admin.post('/reindex', async (c) => {
 
   // 定型文の判定は**全件を見ないと**できない。chunk ごとに全件の説明文を引き直す。
   // 409行 × 短い文字列なので D1 では誤差の範囲。
-  const all = await c.env.DB.prepare('SELECT description FROM places').all<{ description: string }>();
+  const all = await c.env.DB.prepare('SELECT description FROM places').all<{
+    description: string;
+  }>();
   const boilerplate = findBoilerplate((all.results ?? []).map((r) => r.description));
   const vectors: VectorizeVector[] = [];
 
   for (let i = 0; i < rows.length; i += EMBED_BATCH) {
     const chunk = rows.slice(i, i + EMBED_BATCH);
-    const embedded = await embedAll(c.env.AI, chunk.map((r) => embedText(r, boilerplate)));
+    const embedded = await embedAll(
+      c.env.AI,
+      chunk.map((r) => embedText(r, boilerplate)),
+    );
     chunk.forEach((row, j) => {
       vectors.push({
         id: row.id,
@@ -110,13 +122,22 @@ admin.post('/reindex', async (c) => {
  */
 admin.get('/inspect/:id', async (c) => {
   const id = c.req.param('id');
-  const row = await c.env.DB
-    .prepare('SELECT id, name, category, description, area_m2 FROM v_places WHERE id = ?1')
+  const row = await c.env.DB.prepare(
+    'SELECT id, name, category, description, area_m2 FROM v_places WHERE id = ?1',
+  )
     .bind(id)
-    .first<{ id: string; name: string; category: string; description: string; area_m2: number | null }>();
+    .first<{
+      id: string;
+      name: string;
+      category: string;
+      description: string;
+      area_m2: number | null;
+    }>();
   if (!row) return c.json({ error: 'not_found' }, 404);
 
-  const all = await c.env.DB.prepare('SELECT description FROM places').all<{ description: string }>();
+  const all = await c.env.DB.prepare('SELECT description FROM places').all<{
+    description: string;
+  }>();
   const boilerplate = findBoilerplate((all.results ?? []).map((r) => r.description));
   const text = embedText(row, boilerplate);
 
@@ -127,7 +148,9 @@ admin.get('/inspect/:id', async (c) => {
   // cosine 類似度。1.0 なら索引の中身は最新
   let cosine: number | null = null;
   if (storedValues?.length === fresh.length) {
-    let dot = 0, a = 0, b = 0;
+    let dot = 0,
+      a = 0,
+      b = 0;
     for (let i = 0; i < fresh.length; i++) {
       dot += fresh[i] * storedValues[i];
       a += fresh[i] * fresh[i];
@@ -180,17 +203,23 @@ admin.post('/reason-probe', async (c) => {
   let raw: unknown;
   let error: string | null = null;
   try {
-    raw = await c.env.AI.run(REASON_MODEL as never, {
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `${MODE_TONE.indoor}
+    raw = await c.env.AI.run(
+      REASON_MODEL as never,
+      {
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: `${MODE_TONE.indoor}
 
 # 事実
-${factSheet}` },
-      ],
-      max_tokens: 400,
-      temperature: 0.4,
-    } as never);
+${factSheet}`,
+          },
+        ],
+        max_tokens: 400,
+        temperature: 0.4,
+      } as never,
+    );
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
   }
@@ -212,7 +241,7 @@ ${factSheet}` },
  *     "place": { "stepFree": null, "accessibleToilet": true, "shelter": false } }
  */
 admin.post('/validate-probe', async (c) => {
-  const body = await c.req.json().catch(() => null) as {
+  const body = (await c.req.json().catch(() => null)) as {
     text?: unknown;
     field?: 'headline' | 'title' | 'note';
     numbers?: string[];
@@ -250,7 +279,9 @@ admin.post('/validate-probe', async (c) => {
  */
 admin.post('/forget', async (c) => {
   const body = await c.req.json<{ ids?: unknown }>().catch(() => ({ ids: undefined }));
-  const ids = Array.isArray(body.ids) ? body.ids.filter((x): x is string => typeof x === 'string') : [];
+  const ids = Array.isArray(body.ids)
+    ? body.ids.filter((x): x is string => typeof x === 'string')
+    : [];
   if (!ids.length) return c.json({ error: 'bad_request', message: 'ids は文字列の配列' }, 400);
   if (ids.length > 500) return c.json({ error: 'bad_request', message: 'ids は500件まで' }, 400);
 
@@ -260,8 +291,7 @@ admin.post('/forget', async (c) => {
   for (let i = 0; i < ids.length; i += PARAM_LIMIT) {
     const chunk = ids.slice(i, i + PARAM_LIMIT);
     const marks = chunk.map((_, n) => `?${n + 1}`).join(',');
-    const { results } = await c.env.DB
-      .prepare(`SELECT id FROM places WHERE id IN (${marks})`)
+    const { results } = await c.env.DB.prepare(`SELECT id FROM places WHERE id IN (${marks})`)
       .bind(...chunk)
       .all<{ id: string }>();
     for (const r of results ?? []) alive.add(r.id);
@@ -285,6 +315,9 @@ admin.get('/index-info', async (c) => {
     const row = await c.env.DB.prepare('SELECT count(*) AS n FROM places').first<{ n: number }>();
     return c.json({ vectorize: info, d1Places: row?.n ?? 0 });
   } catch (e) {
-    return c.json({ error: 'unavailable', message: e instanceof Error ? e.message : String(e) }, 503);
+    return c.json(
+      { error: 'unavailable', message: e instanceof Error ? e.message : String(e) },
+      503,
+    );
   }
 });

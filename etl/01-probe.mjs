@@ -40,8 +40,22 @@ const LATLNG = {
   lng: ['経度', 'longitude', 'lng', 'lon', '東経'],
 };
 const ACCESS_HINTS = [
-  'バリアフリー', '車椅子', '車いす', 'スロープ', '段差', 'ベンチ', '手すり',
-  'トイレ', '便所', 'だれでも', '多目的', 'エレベーター', '休憩', '施設内容', '備考', '設備',
+  'バリアフリー',
+  '車椅子',
+  '車いす',
+  'スロープ',
+  '段差',
+  'ベンチ',
+  '手すり',
+  'トイレ',
+  '便所',
+  'だれでも',
+  '多目的',
+  'エレベーター',
+  '休憩',
+  '施設内容',
+  '備考',
+  '設備',
 ];
 
 mkdirSync('data/raw', { recursive: true });
@@ -50,8 +64,11 @@ const catalog = JSON.parse(readFileSync('data/catalog.json', 'utf8'));
 /** UTF-8 として不正なら CP932 とみなす。実務上これで足りる。 */
 function decode(buf) {
   const strict = new TextDecoder('utf-8', { fatal: true });
-  try { return { text: strict.decode(buf), encoding: 'UTF-8' }; }
-  catch { return { text: new TextDecoder('shift_jis').decode(buf), encoding: 'CP932(Shift_JIS)' }; }
+  try {
+    return { text: strict.decode(buf), encoding: 'UTF-8' };
+  } catch {
+    return { text: new TextDecoder('shift_jis').decode(buf), encoding: 'CP932(Shift_JIS)' };
+  }
 }
 
 /** ヘッダ行を探す。1行目が説明文のことがあるので上から5行見る。 */
@@ -64,11 +81,15 @@ function findHeader(lines) {
 }
 
 function splitCsv(line) {
-  const out = []; let cur = '', q = false;
+  const out = [];
+  let cur = '',
+    q = false;
   for (const ch of line) {
     if (ch === '"') q = !q;
-    else if (ch === ',' && !q) { out.push(cur.trim()); cur = ''; }
-    else cur += ch;
+    else if (ch === ',' && !q) {
+      out.push(cur.trim());
+      cur = '';
+    } else cur += ch;
   }
   out.push(cur.trim());
   return out.map((c) => c.replace(/^"|"$/g, '').trim());
@@ -81,10 +102,16 @@ const report = [];
 
 for (const [org, title] of CANDIDATES) {
   const ds = catalog.datasets.find((d) => d.org === org && d.title === title);
-  if (!ds) { console.log(`✗ ${org} / ${title} — カタログに無い`); continue; }
+  if (!ds) {
+    console.log(`✗ ${org} / ${title} — カタログに無い`);
+    continue;
+  }
 
   const res = ds.resources.find((r) => r.format === 'CSV') ?? ds.resources[0];
-  if (!res) { console.log(`✗ ${org} / ${title} — リソース無し`); continue; }
+  if (!res) {
+    console.log(`✗ ${org} / ${title} — リソース無し`);
+    continue;
+  }
 
   const file = `data/raw/${ds.name}.${(res.format || 'bin').toLowerCase()}`;
   let buf;
@@ -104,7 +131,10 @@ for (const [org, title] of CANDIDATES) {
   }
 
   const entry = {
-    org, title, format: res.format, file,
+    org,
+    title,
+    format: res.format,
+    file,
     bytes: buf.length,
     license: ds.license,
     pageUrl: ds.pageUrl,
@@ -134,11 +164,14 @@ for (const [org, title] of CANDIDATES) {
   const mark = entry.hasLatLng === true ? '○' : entry.hasLatLng === false ? '×' : '?';
   console.log(
     `${mark} ${org} / ${title}\n` +
-    `    ${entry.format} ${entry.encoding} ${entry.rows ?? '-'}行  ` +
-    `緯度=${entry.latCol ?? '-'} 経度=${entry.lngCol ?? '-'}\n` +
-    `    access候補: ${entry.accessCols?.length ? entry.accessCols.join(' / ') : 'なし'}`
+      `    ${entry.format} ${entry.encoding} ${entry.rows ?? '-'}行  ` +
+      `緯度=${entry.latCol ?? '-'} 経度=${entry.lngCol ?? '-'}\n` +
+      `    access候補: ${entry.accessCols?.length ? entry.accessCols.join(' / ') : 'なし'}`,
   );
 }
 
-writeFileSync('data/probe.json', JSON.stringify({ probedAt: new Date().toISOString(), report }, null, 2) + '\n');
+writeFileSync(
+  'data/probe.json',
+  JSON.stringify({ probedAt: new Date().toISOString(), report }, null, 2) + '\n',
+);
 console.log(`\n→ data/probe.json に ${report.length} 件`);

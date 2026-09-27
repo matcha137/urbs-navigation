@@ -33,14 +33,21 @@ export const suggest = new Hono<{ Bindings: Bindings }>().post('/', async (c) =>
 
   const mode = body.mode;
   if (!mode || !MODE_IDS.includes(mode))
-    return c.json({ error: 'bad_request', message: `mode は ${MODE_IDS.join(' | ')} のいずれか` }, 400);
+    return c.json(
+      { error: 'bad_request', message: `mode は ${MODE_IDS.join(' | ')} のいずれか` },
+      400,
+    );
 
   // 省略時は 60分。画面は必ず送ってくるが、curl で叩いたときに落ちない方がいい
   const minutes = body.minutes === undefined ? 60 : Number(body.minutes);
   if (!isMinutesOption(minutes))
-    return c.json({ error: 'bad_request', message: `minutes は ${MINUTES_OPTIONS.join(' | ')} のいずれか` }, 400);
+    return c.json(
+      { error: 'bad_request', message: `minutes は ${MINUTES_OPTIONS.join(' | ')} のいずれか` },
+      400,
+    );
 
-  const lat = Number(body.lat), lng = Number(body.lng);
+  const lat = Number(body.lat),
+    lng = Number(body.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng))
     return c.json({ error: 'bad_request', message: 'lat / lng が必要' }, 400);
   if (lat < 35.4 || lat > 36.0 || lng < 138.9 || lng > 140.0)
@@ -86,12 +93,13 @@ export const suggest = new Hono<{ Bindings: Bindings }>().post('/', async (c) =>
     return c.json(
       {
         error: 'no_candidates',
-        message: `${profile.label}の条件 (${limits.maxDistanceM}m以内` +
+        message:
+          `${profile.label}の条件 (${limits.maxDistanceM}m以内` +
           `${profile.requireShelter ? '・屋内' : ''}` +
           `${profile.requireWaterside ? '・川や堀の名前がつく場所' : ''}` +
           `${profile.requireAccessibleToilet ? '・車椅子対応トイレあり' : ''}) に合う場所が見つかりませんでした`,
       },
-      404
+      404,
     );
   }
 

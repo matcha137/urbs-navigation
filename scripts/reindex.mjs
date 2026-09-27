@@ -35,7 +35,9 @@ for (;;) {
   }
 
   total += body.processed;
-  console.log(`  ${String(body.offset).padStart(4)} 〜 ${String(body.offset + body.processed).padStart(4)} 件 (${body.elapsedMs}ms)`);
+  console.log(
+    `  ${String(body.offset).padStart(4)} 〜 ${String(body.offset + body.processed).padStart(4)} 件 (${body.elapsedMs}ms)`,
+  );
 
   if (body.done) break;
   offset = body.next;

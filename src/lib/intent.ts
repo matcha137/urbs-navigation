@@ -37,14 +37,62 @@ export interface QueryIntent {
 
 /** 語彙 → 条件。増やすときは place_access に実際にある属性かを確かめること。 */
 const RULES: { re: RegExp; label: string; apply: (i: QueryIntent) => void }[] = [
-  { re: /(雨|濡れ|屋内|室内|中で|しのげ|雨宿り)/, label: '屋内', apply: (i) => { i.requireShelter = true; } },
-  { re: /(車椅子|車いす|くるまいす|バリアフリー|段差|杖|ベビーカー)/, label: '車椅子対応', apply: (i) => { i.requireAccessibleToilet = true; } },
-  { re: /(トイレ|お手洗い|化粧室)/, label: 'トイレ', apply: (i) => { i.requireAccessibleToilet = true; } },
-  { re: /(広い|ひろい|大きい|おおきい|のびのび|ひろびろ|開けた)/, label: '広い', apply: (i) => { i.preferLarge = true; } },
-  { re: /(小さ|ちいさ|近所|ちかく|近く|すぐ|ちょっと)/, label: '小さい・近い', apply: (i) => { i.preferSmall = true; } },
-  { re: /(川|水辺|運河|海|臨海|親水|river)/, label: '水辺', apply: (i) => { i.category = 'riverside'; } },
-  { re: /(公園|広場|遊園|緑地)/, label: '公園', apply: (i) => { i.category = 'park'; } },
-  { re: /(施設|センター|会館|資料館|博物館|図書館|ホール)/, label: '屋内施設', apply: (i) => { i.category = 'facility'; } },
+  {
+    re: /(雨|濡れ|屋内|室内|中で|しのげ|雨宿り)/,
+    label: '屋内',
+    apply: (i) => {
+      i.requireShelter = true;
+    },
+  },
+  {
+    re: /(車椅子|車いす|くるまいす|バリアフリー|段差|杖|ベビーカー)/,
+    label: '車椅子対応',
+    apply: (i) => {
+      i.requireAccessibleToilet = true;
+    },
+  },
+  {
+    re: /(トイレ|お手洗い|化粧室)/,
+    label: 'トイレ',
+    apply: (i) => {
+      i.requireAccessibleToilet = true;
+    },
+  },
+  {
+    re: /(広い|ひろい|大きい|おおきい|のびのび|ひろびろ|開けた)/,
+    label: '広い',
+    apply: (i) => {
+      i.preferLarge = true;
+    },
+  },
+  {
+    re: /(小さ|ちいさ|近所|ちかく|近く|すぐ|ちょっと)/,
+    label: '小さい・近い',
+    apply: (i) => {
+      i.preferSmall = true;
+    },
+  },
+  {
+    re: /(川|水辺|運河|海|臨海|親水|river)/,
+    label: '水辺',
+    apply: (i) => {
+      i.category = 'riverside';
+    },
+  },
+  {
+    re: /(公園|広場|遊園|緑地)/,
+    label: '公園',
+    apply: (i) => {
+      i.category = 'park';
+    },
+  },
+  {
+    re: /(施設|センター|会館|資料館|博物館|図書館|ホール)/,
+    label: '屋内施設',
+    apply: (i) => {
+      i.category = 'facility';
+    },
+  },
 ];
 
 export function readIntent(q: string): QueryIntent {
@@ -84,7 +132,10 @@ export function readIntent(q: string): QueryIntent {
  */
 export function intentScore(
   intent: QueryIntent,
-  place: { category: string; access: { shelter: boolean; accessibleToilet: boolean; areaM2: number | null } }
+  place: {
+    category: string;
+    access: { shelter: boolean; accessibleToilet: boolean; areaM2: number | null };
+  },
 ): number {
   const checks: boolean[] = [];
 

@@ -83,12 +83,16 @@ const searchPost = new Hono<{ Bindings: Bindings }>().post('/', async (c) => {
     return c.json({ error: 'bad_request', message: `q は ${MAX_QUERY_LEN} 文字まで` }, 400);
 
   if (body.mode && !MODE_IDS.includes(body.mode))
-    return c.json({ error: 'bad_request', message: `mode は ${MODE_IDS.join(' | ')} のいずれか` }, 400);
+    return c.json(
+      { error: 'bad_request', message: `mode は ${MODE_IDS.join(' | ')} のいずれか` },
+      400,
+    );
 
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(body.limit) || DEFAULT_LIMIT));
   const profile = body.mode ? MODES[body.mode] : undefined;
 
-  const lat = Number(body.lat), lng = Number(body.lng);
+  const lat = Number(body.lat),
+    lng = Number(body.lng);
   const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
 
   // モードが指定されていれば距離も効かせる。検索でも「行ける範囲」は守る。
@@ -181,24 +185,24 @@ function rank(places: Place[], intent: QueryIntent, ranked: Map<string, number> 
 
 export const search = new Hono<{ Bindings: Bindings }>()
 
-.route('/', searchPost)
+  .route('/', searchPost)
 
-/** 手で叩いて確かめる用。本体は POST と同じ。 */
-.get('/', async (c) => {
-  const q = c.req.query('q');
-  if (!q) return c.json({ error: 'bad_request', message: 'q が必要' }, 400);
-  const near = c.req.query('near')?.split(',').map(Number);
-  return searchPost.fetch(
-    new Request(new URL('/', c.req.url), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        q,
-        mode: c.req.query('mode'),
-        limit: Number(c.req.query('limit')) || undefined,
-        ...(near && near.length === 2 ? { lat: near[0], lng: near[1] } : {}),
+  /** 手で叩いて確かめる用。本体は POST と同じ。 */
+  .get('/', async (c) => {
+    const q = c.req.query('q');
+    if (!q) return c.json({ error: 'bad_request', message: 'q が必要' }, 400);
+    const near = c.req.query('near')?.split(',').map(Number);
+    return searchPost.fetch(
+      new Request(new URL('/', c.req.url), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          q,
+          mode: c.req.query('mode'),
+          limit: Number(c.req.query('limit')) || undefined,
+          ...(near && near.length === 2 ? { lat: near[0], lng: near[1] } : {}),
+        }),
       }),
-    }),
-    c.env
-  );
-});
+      c.env,
+    );
+  });

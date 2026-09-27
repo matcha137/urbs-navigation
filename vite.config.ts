@@ -9,7 +9,20 @@ import { cloudflare } from '@cloudflare/vite-plugin';
  */
 export default defineConfig({
   plugins: [cloudflare()],
-  // 整形はまだ入れない (既存コードがどの整形器にも揃っていない)。lint だけ使う
+  // 整形するのは手で書くコードだけ。ETL やスクリプトが書き出すもの (data/ db/ fixtures/
+  // *.json) と、デモ案の書き出し (design/)、文章 (docs/ *.md) は触らない
+  fmt: {
+    singleQuote: true,
+    ignorePatterns: [
+      'data/**',
+      'db/**',
+      'fixtures/**',
+      'design/**',
+      'docs/**',
+      '**/*.md',
+      '**/*.json',
+    ],
+  },
   // design/ はデモ案の書き出しで、手で直すコードではないので見ない
   lint: { ignorePatterns: ['design/**'] },
   // React ではなく Hono 同梱の JSX ランタイムで描く (web/tsconfig.json と揃える)

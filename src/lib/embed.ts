@@ -47,7 +47,10 @@ const BOILERPLATE_MIN_OCCURRENCES = 3;
 const BOILERPLATE_MIN_LENGTH = 25;
 
 const sentences = (text: string) =>
-  text.split('。').map((t) => t.trim()).filter(Boolean);
+  text
+    .split('。')
+    .map((t) => t.trim())
+    .filter(Boolean);
 
 /**
  * 全件の説明文から「多くの場所で使い回されている長い文」を洗い出す。
@@ -65,9 +68,7 @@ export function findBoilerplate(descriptions: string[]): Set<string> {
     }
   }
   return new Set(
-    [...count.entries()]
-      .filter(([, n]) => n >= BOILERPLATE_MIN_OCCURRENCES)
-      .map(([s]) => s)
+    [...count.entries()].filter(([, n]) => n >= BOILERPLATE_MIN_OCCURRENCES).map(([s]) => s),
   );
 }
 

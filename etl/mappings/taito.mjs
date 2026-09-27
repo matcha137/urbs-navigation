@@ -27,7 +27,9 @@ export default [
     ward: '台東区',
     source: {
       datasetName: '台東区 都市公園・都立公園一覧',
-      publisher, license, retrievedAt,
+      publisher,
+      license,
+      retrievedAt,
       sourceUrl: page('t131067d2025000003'),
     },
   }),
@@ -38,7 +40,9 @@ export default [
     file: 'data/utf8/t131067d0000000249.csv',
     source: {
       datasetName: '台東区 トイレ情報',
-      publisher, license, retrievedAt,
+      publisher,
+      license,
+      retrievedAt,
       sourceUrl: page('t131067d0000000249'),
     },
   }),

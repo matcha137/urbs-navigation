@@ -19,7 +19,9 @@ function lit(v) {
   if (typeof v === 'boolean') return v ? '1' : '0';
   if (typeof v === 'number') return Number.isFinite(v) ? String(v) : 'NULL';
   // 制御文字は落とす。改行は空白に潰す (CSV由来の説明文に混ざることがある)
-  const s = String(v).replace(/[\r\n\t]+/g, ' ').replace(/[\x00-\x1f\x7f]/g, '');
+  const s = String(v)
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/[\x00-\x1f\x7f]/g, '');
   return `'${s.replace(/'/g, "''")}'`;
 }
 
@@ -42,12 +44,22 @@ const accessRows = [];
 const sourceRows = [];
 
 for (const p of places) {
-  placeRows.push([p.id, p.name, p.nameKana, p.lat, p.lng, p.ward, p.category, p.description, p.address]);
+  placeRows.push([
+    p.id,
+    p.name,
+    p.nameKana,
+    p.lat,
+    p.lng,
+    p.ward,
+    p.category,
+    p.description,
+    p.address,
+  ]);
 
   const a = p.access;
   accessRows.push([
     p.id,
-    a.stepFree,          // 三値。null は NULL のまま
+    a.stepFree, // 三値。null は NULL のまま
     a.slope,
     p.areaM2,
     a.seatingTier,
@@ -85,21 +97,39 @@ const sql = [
   header,
   '',
   '-- places',
-  ...insertStatements('places',
+  ...insertStatements(
+    'places',
     ['id', 'name', 'name_kana', 'lat', 'lng', 'ward', 'category', 'description', 'address'],
-    placeRows),
+    placeRows,
+  ),
   '',
   '-- place_access (step_free / slope は三値。NULL = 不明であって非対応ではない)',
-  ...insertStatements('place_access',
-    ['place_id', 'step_free', 'slope', 'area_m2', 'seating_tier', 'has_toilet',
-     'accessible_toilet', 'ostomate', 'toilet_distance_m', 'shelter', 'handrail',
-     'nearest_transit_m', 'confidence'],
-    accessRows),
+  ...insertStatements(
+    'place_access',
+    [
+      'place_id',
+      'step_free',
+      'slope',
+      'area_m2',
+      'seating_tier',
+      'has_toilet',
+      'accessible_toilet',
+      'ostomate',
+      'toilet_distance_m',
+      'shelter',
+      'handrail',
+      'nearest_transit_m',
+      'confidence',
+    ],
+    accessRows,
+  ),
   '',
   '-- place_source (出典表示と README の根拠。1場所が複数データセット由来になりうる)',
-  ...insertStatements('place_source',
+  ...insertStatements(
+    'place_source',
     ['place_id', 'dataset_name', 'publisher', 'source_url', 'license', 'retrieved_at'],
-    sourceRows),
+    sourceRows,
+  ),
   '',
 ].join('\n');
 

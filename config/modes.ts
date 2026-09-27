@@ -209,9 +209,7 @@ export const MODES: Record<ModeId, ModeProfile> = {
   },
 };
 
-export const MODE_LIST: ModeProfile[] = [
-  MODES.stroll, MODES.water, MODES.active, MODES.indoor,
-];
+export const MODE_LIST: ModeProfile[] = [MODES.stroll, MODES.water, MODES.active, MODES.indoor];
 
 // =====================================================================
 // 散歩時間
@@ -228,15 +226,18 @@ export const MODE_LIST: ModeProfile[] = [
 export const MINUTES_OPTIONS = [30, 60, 90] as const;
 export type MinutesOption = (typeof MINUTES_OPTIONS)[number];
 
-export const MINUTES: Record<MinutesOption, {
-  /** 出発地から立ち寄り先までの許容直線距離 (m) */
-  maxDistanceM: number;
-  /** ルート総距離の上限 (m) */
-  maxRouteM: number;
-  maxStops: number;
-  targetSteps: number;
-}> = {
-  30: { maxDistanceM: 700,  maxRouteM: 1100, maxStops: 2, targetSteps: 1400 },
+export const MINUTES: Record<
+  MinutesOption,
+  {
+    /** 出発地から立ち寄り先までの許容直線距離 (m) */
+    maxDistanceM: number;
+    /** ルート総距離の上限 (m) */
+    maxRouteM: number;
+    maxStops: number;
+    targetSteps: number;
+  }
+> = {
+  30: { maxDistanceM: 700, maxRouteM: 1100, maxStops: 2, targetSteps: 1400 },
   60: { maxDistanceM: 1200, maxRouteM: 2200, maxStops: 3, targetSteps: 3000 },
   90: { maxDistanceM: 1700, maxRouteM: 3400, maxStops: 4, targetSteps: 4600 },
 };
@@ -260,18 +261,22 @@ export interface WeatherAdjust {
 }
 
 export const WEATHER_ADJUST: Record<WeatherCondition, WeatherAdjust> = {
-  clear:  { distanceScale: 1.0,  shelterBoost: 0.0, note: '' },
-  cloudy: { distanceScale: 1.0,  shelterBoost: 0.0, note: '' },
-  rain:   { distanceScale: 0.65, shelterBoost: 0.4, note: '雨なので短めに、屋根のある場所を優先しました' },
-  snow:   { distanceScale: 0.5,  shelterBoost: 0.5, note: '雪なので足元の安全を優先しました' },
+  clear: { distanceScale: 1.0, shelterBoost: 0.0, note: '' },
+  cloudy: { distanceScale: 1.0, shelterBoost: 0.0, note: '' },
+  rain: {
+    distanceScale: 0.65,
+    shelterBoost: 0.4,
+    note: '雨なので短めに、屋根のある場所を優先しました',
+  },
+  snow: { distanceScale: 0.5, shelterBoost: 0.5, note: '雪なので足元の安全を優先しました' },
 };
 
 /** 気温による追加補正。暑さ寒さは距離だけを縮める。 */
 export function tempScale(tempC: number): number {
   if (tempC >= 30) return 0.6;
   if (tempC >= 27) return 0.8;
-  if (tempC <= 3)  return 0.65;
-  if (tempC <= 8)  return 0.85;
+  if (tempC <= 3) return 0.65;
+  if (tempC <= 8) return 0.85;
   return 1.0;
 }
 
@@ -282,14 +287,12 @@ export function tempScale(tempC: number): number {
 export function effectiveLimits(
   mode: ModeId,
   minutes: MinutesOption,
-  weather: { condition: WeatherCondition; tempC: number }
+  weather: { condition: WeatherCondition; tempC: number },
 ) {
   const p = MODES[mode];
   const base = MINUTES[minutes];
   const scale =
-    p.distanceScale *
-    WEATHER_ADJUST[weather.condition].distanceScale *
-    tempScale(weather.tempC);
+    p.distanceScale * WEATHER_ADJUST[weather.condition].distanceScale * tempScale(weather.tempC);
 
   return {
     ...p,

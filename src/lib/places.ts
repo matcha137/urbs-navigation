@@ -6,8 +6,12 @@
 import type { Place, PlaceAccess, PlaceCategory, PlaceSource } from '../../shared/types';
 import { seatingTierFromArea, type ModeProfile } from '../../config/modes';
 import {
-  NOT_A_DESTINATION, NOT_A_DESTINATION_PREFIX, NOT_A_DESTINATION_PREFIX_KEEP,
-  WATERSIDE_KEYWORDS, NOT_WATERSIDE_WORDS, WATERSIDE_RIVER_TOKEN,
+  NOT_A_DESTINATION,
+  NOT_A_DESTINATION_PREFIX,
+  NOT_A_DESTINATION_PREFIX_KEEP,
+  WATERSIDE_KEYWORDS,
+  NOT_WATERSIDE_WORDS,
+  WATERSIDE_RIVER_TOKEN,
 } from '../../config/destinations';
 import { Params, distanceExpr } from './sql';
 
@@ -129,12 +133,10 @@ export function watersideCondition(): string {
   // 浜田山公園を水辺と呼ばないため。理由と一覧は config/destinations.ts。
   const cleaned = NOT_WATERSIDE_WORDS.reduce(
     (expr, w) => `replace(${expr}, '${w.replace(/'/g, "''")}', '')`,
-    'name'
+    'name',
   );
   const words = [...WATERSIDE_KEYWORDS, WATERSIDE_RIVER_TOKEN];
-  const likes = words
-    .map((kw) => `${cleaned} LIKE '%${kw.replace(/'/g, "''")}%'`)
-    .join(' OR ');
+  const likes = words.map((kw) => `${cleaned} LIKE '%${kw.replace(/'/g, "''")}%'`).join(' OR ');
   return `(category = 'riverside' OR ${likes})`;
 }
 
@@ -147,15 +149,15 @@ export function watersideCondition(): string {
  * 語は config の const 配列でユーザ入力ではないが、念のため引用符は潰す。
  */
 export function destinationConditions(): string {
-  const contains = NOT_A_DESTINATION
-    .map((kw) => `name NOT LIKE '%${kw.replace(/'/g, "''")}%'`);
+  const contains = NOT_A_DESTINATION.map((kw) => `name NOT LIKE '%${kw.replace(/'/g, "''")}%'`);
   // 「旧」は先頭のときだけ。部分一致だと地名の「旧」まで巻き込む。
   // さらに「旧中川」で始まる名前は川の名前なので残す (config 側の注記)。
-  const keep = NOT_A_DESTINATION_PREFIX_KEEP
-    .map((kw) => `name LIKE '${kw.replace(/'/g, "''")}%'`)
-    .join(' OR ');
-  const prefixes = NOT_A_DESTINATION_PREFIX
-    .map((kw) => `(name NOT LIKE '${kw.replace(/'/g, "''")}%' OR ${keep})`);
+  const keep = NOT_A_DESTINATION_PREFIX_KEEP.map(
+    (kw) => `name LIKE '${kw.replace(/'/g, "''")}%'`,
+  ).join(' OR ');
+  const prefixes = NOT_A_DESTINATION_PREFIX.map(
+    (kw) => `(name NOT LIKE '${kw.replace(/'/g, "''")}%' OR ${keep})`,
+  );
   return [...contains, ...prefixes].join(' AND ');
 }
 
@@ -200,7 +202,7 @@ export interface PlaceQueryResult {
  */
 export async function queryPlaces(
   db: D1Database,
-  opts: PlaceQueryOptions
+  opts: PlaceQueryOptions,
 ): Promise<PlaceQueryResult> {
   const params = new Params();
   const where: string[] = [];
@@ -213,7 +215,9 @@ export async function queryPlaces(
   if (opts.ids) {
     if (!opts.ids.length) return { rows: [], total: 0 }; // IN () は構文エラーになる
     if (opts.ids.length > PARAM_LIMIT)
-      throw new Error(`ids が ${opts.ids.length} 件。D1 のパラメータ上限を超える (${PARAM_LIMIT} まで)`);
+      throw new Error(
+        `ids が ${opts.ids.length} 件。D1 のパラメータ上限を超える (${PARAM_LIMIT} まで)`,
+      );
     where.push(`id IN (${opts.ids.map((id) => params.add(id)).join(', ')})`);
   }
   if (opts.shelter) where.push('shelter = 1');
@@ -259,7 +263,7 @@ export async function queryPlaces(
  */
 export async function fetchSources(
   db: D1Database,
-  ids: string[]
+  ids: string[],
 ): Promise<Map<string, PlaceSource[]>> {
   const map = new Map<string, PlaceSource[]>();
   if (!ids.length) return map;
@@ -269,12 +273,17 @@ export async function fetchSources(
   const statements: D1PreparedStatement[] = [];
   for (let i = 0; i < ids.length; i += PARAM_LIMIT) {
     const params = new Params();
-    const holes = ids.slice(i, i + PARAM_LIMIT).map((id) => params.add(id)).join(', ');
+    const holes = ids
+      .slice(i, i + PARAM_LIMIT)
+      .map((id) => params.add(id))
+      .join(', ');
     statements.push(
-      db.prepare(
-        `SELECT place_id, dataset_name, publisher, source_url, license, retrieved_at
-         FROM place_source WHERE place_id IN (${holes})`
-      ).bind(...params.values)
+      db
+        .prepare(
+          `SELECT place_id, dataset_name, publisher, source_url, license, retrieved_at
+         FROM place_source WHERE place_id IN (${holes})`,
+        )
+        .bind(...params.values),
     );
   }
 
@@ -305,6 +314,9 @@ export async function fetchSources(
 
 /** 行の配列を Place の配列にする。出典は1クエリでまとめて引く。 */
 export async function hydrate(db: D1Database, rows: PlaceRow[]): Promise<Place[]> {
-  const sources = await fetchSources(db, rows.map((r) => r.id));
+  const sources = await fetchSources(
+    db,
+    rows.map((r) => r.id),
+  );
   return rows.map((r) => rowToPlace(r, sources.get(r.id) ?? []));
 }

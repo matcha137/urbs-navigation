@@ -28,10 +28,15 @@ const placeId = (kind, slug, rowId, i) => `${kind}:${slug}:${rowId || `row${i}`}
  */
 export function standardParks({ key, slug, label, file, ward, source }) {
   return {
-    key, role: 'place', label, file, source,
+    key,
+    role: 'place',
+    label,
+    file,
+    source,
 
     map(row, i) {
-      const lat = num(row['緯度']), lng = num(row['経度']);
+      const lat = num(row['緯度']),
+        lng = num(row['経度']);
       const name = str(row['名称']);
       if (!name || !validCoord(lat, lng)) return null;
 
@@ -40,7 +45,8 @@ export function standardParks({ key, slug, label, file, ward, source }) {
         id: placeId('park', slug, str(row['ID']), i),
         name,
         nameKana: null,
-        lat, lng,
+        lat,
+        lng,
         ward,
         category: 'park',
         address: str(row['所在地_連結表記']),
@@ -50,10 +56,10 @@ export function standardParks({ key, slug, label, file, ward, source }) {
           str(row['所在地_町字']) ? `${row['所在地_町字']}にある` : null,
         ].filter(Boolean),
         access: {
-          stepFree: null,          // データなし。不明であって非対応ではない
+          stepFree: null, // データなし。不明であって非対応ではない
           slope: null,
-          shelter: false,          // 屋外
-          hasToilet: false,        // 結合で埋める
+          shelter: false, // 屋外
+          hasToilet: false, // 結合で埋める
           accessibleToilet: false, // 結合で埋める
           ostomate: false,
           confidence: 'inferred',
@@ -85,10 +91,15 @@ export function standardParks({ key, slug, label, file, ward, source }) {
  */
 export function standardToilets({ key, label, file, source }) {
   return {
-    key, role: 'donor', label, file, source,
+    key,
+    role: 'donor',
+    label,
+    file,
+    source,
 
     map(row, i) {
-      const lat = num(row['緯度']), lng = num(row['経度']);
+      const lat = num(row['緯度']),
+        lng = num(row['経度']);
       if (!validCoord(lat, lng)) return null;
 
       // 目黒区だけ列名が「多機能トイレ数」。どちらか在る方を読む
@@ -98,7 +109,8 @@ export function standardToilets({ key, label, file, source }) {
       return {
         id: `toilet:${str(row['ID']) || `row${i}`}`,
         name: str(row['名称']) ?? '公衆トイレ',
-        lat, lng,
+        lat,
+        lng,
         wheelchair: declaredWc === true || bfCount > 0,
         ostomate: triState(row['オストメイト設置トイレ有無']) === true,
         babyFacility: triState(row['乳幼児用設備設置トイレ有無']) === true,
@@ -125,12 +137,38 @@ export function standardToilets({ key, label, file, source }) {
  * config/destinations.ts が行き先クエリでだけ除く。役割を分けている。
  */
 export const NOT_A_PLACE_NAME = [
-  '小学校', '中学校', '高等学校', '幼稚園', '保育', 'こども園', '子供園',
-  '学童', 'きっずクラブ', '学園',
-  '区営住宅', '区民住宅', '都営住宅', '住宅', '団地', '寮',
-  '駐車場', '駐輪', '自転車置場', '自転車駐車場',
-  '倉庫', '備蓄', '給水', '水防', '消防', '清掃事務所', '中継所', '作業所',
-  '本庁舎', '分庁舎', '庁舎', '係',
+  '小学校',
+  '中学校',
+  '高等学校',
+  '幼稚園',
+  '保育',
+  'こども園',
+  '子供園',
+  '学童',
+  'きっずクラブ',
+  '学園',
+  '区営住宅',
+  '区民住宅',
+  '都営住宅',
+  '住宅',
+  '団地',
+  '寮',
+  '駐車場',
+  '駐輪',
+  '自転車置場',
+  '自転車駐車場',
+  '倉庫',
+  '備蓄',
+  '給水',
+  '水防',
+  '消防',
+  '清掃事務所',
+  '中継所',
+  '作業所',
+  '本庁舎',
+  '分庁舎',
+  '庁舎',
+  '係',
 ];
 
 /**
@@ -158,10 +196,15 @@ export const NAME_CATEGORY_RULES = [
  */
 export function standardFacilities({ key, slug, label, file, ward, source, nameColumn = '名称' }) {
   return {
-    key, role: 'place', label, file, source,
+    key,
+    role: 'place',
+    label,
+    file,
+    source,
 
     map(row, i) {
-      const lat = num(row['緯度']), lng = num(row['経度']);
+      const lat = num(row['緯度']),
+        lng = num(row['経度']);
       const name = str(row[nameColumn]);
       if (!name || !validCoord(lat, lng)) return null;
       if (NOT_A_PLACE_NAME.some((k) => name.includes(k))) return null;
@@ -170,13 +213,12 @@ export function standardFacilities({ key, slug, label, file, ward, source, nameC
       const isOutdoor = category === 'park' || category === 'garden' || category === 'riverside';
 
       const wheelchairOk = triState(row['車椅子可']);
-      const slopeOrLift  = triState(row['スロープ、エレベータ、エスカレータ']);
-      const bfToilet     = triState(row['バリアフリートイレ']);
-      const ostomate     = triState(row['オストメイト対応トイレ']);
+      const slopeOrLift = triState(row['スロープ、エレベータ、エスカレータ']);
+      const bfToilet = triState(row['バリアフリートイレ']);
+      const ostomate = triState(row['オストメイト対応トイレ']);
 
       const stepFree =
-        slopeOrLift === true || wheelchairOk === true ? true :
-        slopeOrLift === false ? false : null;
+        slopeOrLift === true || wheelchairOk === true ? true : slopeOrLift === false ? false : null;
 
       const declared = [wheelchairOk, slopeOrLift, bfToilet, ostomate].some((v) => v !== null);
       const desc = str(row['説明']);
@@ -185,7 +227,8 @@ export function standardFacilities({ key, slug, label, file, ward, source, nameC
         id: placeId('facility', slug, str(row['ID']), i),
         name,
         nameKana: str(row['名称_カナ']),
-        lat, lng,
+        lat,
+        lng,
         ward,
         category,
         address: str(row['所在地_連結表記']),
