@@ -98,7 +98,7 @@ for (const s of stationCfg.stations) {
     if (counts[id] >= MIN_COUNT) modes.push(id);
   }
   out[s.id] = { ward: s.ward, name: s.name, counts, modes };
-  rows.push([s.ward, s.name, near.length, counts, modes]);
+  rows.push([s.ward, s.name, counts, modes]);
 }
 
 writeFileSync(
@@ -121,7 +121,7 @@ writeFileSync(
 
 console.log('駅'.padEnd(12) + 'のんびり 水辺 しっかり 屋内   選べるもの');
 let lastWard = '';
-for (const [ward, name, total, c, modes] of rows) {
+for (const [ward, name, c, modes] of rows) {
   if (ward !== lastWard) {
     console.log(`--- ${ward}`);
     lastWard = ward;

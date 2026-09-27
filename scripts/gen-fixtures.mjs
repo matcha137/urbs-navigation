@@ -109,7 +109,6 @@ const SRC_FACILITY = {
 const kiyosumi2 = park('江東区立清澄二丁目公園');
 const shirakawa1 = park('江東区立白河一丁目公園');
 const fukagawaEdo = facility('江東区深川江戸資料館');
-const roujin = facility('深川老人福祉センター');
 
 const stop = (order, p, note, stayLabel) => ({
   order,

@@ -318,7 +318,8 @@ export async function applyReasons(
       source = 'ai';
       if (out) {
         const write = env.CACHE?.put(key, JSON.stringify(out), { expirationTtl: CACHE_TTL_S });
-        if (write) opts.ctx ? opts.ctx.waitUntil(write) : await write.catch(() => {});
+        if (write && opts.ctx) opts.ctx.waitUntil(write);
+        else if (write) await write.catch(() => {});
       }
     }
   } catch (e) {

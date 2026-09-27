@@ -422,10 +422,6 @@ for (const mode of ['active', 'stroll', 'indoor', 'water']) {
       String(p.estimatedMinutes),
       String(p.estimatedSteps),
       String(p.stops.length),
-      ...p.stops.flatMap((s) => {
-        const pl = null;
-        return [];
-      }),
     ]);
     // 立ち寄り先の属性値も許す
     const detail = await post('/api/search', { q: p.stops[0].name, limit: 1 });

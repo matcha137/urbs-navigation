@@ -21,6 +21,7 @@ function lit(v) {
   // 制御文字は落とす。改行は空白に潰す (CSV由来の説明文に混ざることがある)
   const s = String(v)
     .replace(/[\r\n\t]+/g, ' ')
+    // oxlint-disable-next-line no-control-regex -- 制御文字を落とすのがこの正規表現の目的
     .replace(/[\x00-\x1f\x7f]/g, '');
   return `'${s.replace(/'/g, "''")}'`;
 }
