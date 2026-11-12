@@ -3,13 +3,13 @@
  *
  * **ETL で D1 を作り直したら必ずこれを回すこと。** でないと索引が古い場所を指す。
  *
- *   ADMIN_TOKEN=xxxx node scripts/reindex.mjs
- *   ADMIN_TOKEN=xxxx node scripts/reindex.mjs http://localhost:8787
+ *   ADMIN_TOKEN=xxxx node scripts/reindex.mjs                      npm run dev (http://localhost:5173) に対して
+ *   ADMIN_TOKEN=xxxx node scripts/reindex.mjs https://<デプロイ先>  デプロイした Worker に対して
  *
  * Worker の実行時間に収まるよう、1リクエスト 150件ずつに割って呼ぶ。
  * 途中で落ちても同じ id に upsert するだけなので、そのまま回し直せる。
  */
-const BASE = (process.argv[2] ?? 'https://urbs-navigation.chori39.workers.dev').replace(/\/$/, '');
+const BASE = (process.argv[2] ?? 'http://localhost:5173').replace(/\/$/, '');
 const TOKEN = process.env.ADMIN_TOKEN;
 const CHUNK = 150;
 

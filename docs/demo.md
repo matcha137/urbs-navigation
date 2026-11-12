@@ -3,7 +3,8 @@
 **このドキュメントに出てこない機能は作らない。**
 迷ったら「これはこの90秒に映るか？」で判断する。
 
-本番URL: https://urbs-navigation.chori39.workers.dev
+本番URL（当時）: https://urbs-navigation.chori39.workers.dev — ハッカソン後にアカウントが運営側で削除され、今は動いていない。
+再現するときは手元の開発サーバ (`http://localhost:5173`) で開く。
 
 ---
 
@@ -16,7 +17,7 @@
 
 ## 操作（7ステップ）
 
-**URL は `https://urbs-navigation.chori39.workers.dev/?demo=1` を開く。**
+**URL は `?demo=1` を付けて開く**（当時は `https://urbs-navigation.chori39.workers.dev/?demo=1`、手元なら `http://localhost:5173/?demo=1`）。
 `?demo=1` で位置情報の許可ダイアログを飛ばし、天気を「18°・小雨、14時には上がる」に固定する。
 
 | # | 時間 | 操作 | 画面に出るもの | 言うこと |
