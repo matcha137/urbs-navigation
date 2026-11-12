@@ -1,6 +1,7 @@
 # API
 
-`https://urbs-navigation.chori39.workers.dev`
+ハッカソン期間中は `https://urbs-navigation.chori39.workers.dev` で公開していた（アカウント削除済みで、今は動いていない）。
+手元では開発サーバ `http://localhost:5173` の `/api/*` で同じものが動く。
 
 型は [`shared/types.ts`](../shared/types.ts) が唯一の正。SQL は [`db/queries.sql`](../db/queries.sql) が原本。
 

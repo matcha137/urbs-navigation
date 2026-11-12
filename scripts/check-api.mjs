@@ -3,13 +3,13 @@
  *
  * ADMIN_TOKEN があれば検証 (T-72) の検査も回す。無ければその節だけ飛ばす。
  *
- *   node scripts/check-api.mjs                        本番に対して
- *   node scripts/check-api.mjs http://localhost:5173  npm run dev (vite) に対して
+ *   node scripts/check-api.mjs                        npm run dev (http://localhost:5173) に対して
+ *   node scripts/check-api.mjs https://<デプロイ先>    デプロイした Worker に対して
  *
  * fixtures と違い**実データが返ってくるか**を見る。
  * 4つの体調すべてでプランが組めることが最低条件 (デモが死ぬため)。
  */
-const BASE = (process.argv[2] ?? 'https://urbs-navigation.chori39.workers.dev').replace(/\/$/, '');
+const BASE = (process.argv[2] ?? 'http://localhost:5173').replace(/\/$/, '');
 const ORIGIN = { lat: 35.6816, lng: 139.7975 }; // 清澄白河駅
 
 const errors = [];
